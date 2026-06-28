@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Workplace English Lab</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --ink:#0D1520;
+  --ink2:#131E2D;
+  --ink3:#1A2840;
+  --line:rgba(255,255,255,0.08);
+  --amber:#FFC443;
+  --amber2:#FF9D00;
+  --teal:#2EECC6;
+  --teal2:#0FB8A0;
+  --coral:#FF5C5C;
+  --rose:#FF7EB3;
+  --violet:#A78BFF;
+  --sky:#5EC4FF;
+  --green:#4ADE80;
+  --text:#E8EEF7;
+  --text2:#9BADC0;
+  --text3:#5F7390;
+  --font:'Space Grotesk', sans-serif;
+  --body:'Plus Jakarta Sans', sans-serif;
+  --mono:'JetBrains Mono', monospace;
+  --rad:14px;
+  --rad-sm:9px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth; font-size:16px;}
+body{background:var(--ink); color:var(--text); font-family:var(--body); -webkit-font-smoothing:antialiased; overflow-x:hidden;}
+button{font-family:var(--font); cursor:pointer;}
+input,textarea{font-family:var(--body);}
+::selection{background:var(--amber); color:#000;}
+:focus-visible{outline:2px solid var(--amber); outline-offset:2px;}
+*::-webkit-scrollbar{width:4px; height:4px;}
+*::-webkit-scrollbar-track{background:transparent;}
+*::-webkit-scrollbar-thumb{background:var(--line); border-radius:9px;}
+
+/* ======== TOP BAR ======== */
+#topbar{
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(13,21,32,0.95); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+}
+.tb-main{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px;}
+.logo{font-family:var(--font);font-weight:700;font-size:1rem;display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.logo-icon{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--amber),var(--amber2));display:flex;align-items:center;justify-content:center;font-size:14px;}
+.tb-stats{display:flex;gap:8px;align-items:center;margin-left:auto;flex-shrink:0;}
+.stat-chip{font-family:var(--mono);font-size:0.7rem;color:var(--text2);background:var(--ink3);border:1px solid var(--line);padding:4px 10px;border-radius:20px;white-space:nowrap;}
+.stat-chip b{color:var(--amber);}
+.stat-chip.streak b{color:var(--coral);}
+
+/* ======== BOTTOM NAV (mobile) ======== */
+#bottomNav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(13,21,32,0.97);border-top:1px solid var(--line);
+  display:flex;overflow-x:auto;scrollbar-width:none;padding:6px 4px;gap:2px;
+}
+#bottomNav::-webkit-scrollbar{display:none;}
+.bnav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px;
+  padding:5px 6px;border-radius:10px;border:none;background:transparent;color:var(--text3);
+  font-size:0.58rem;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;transition:all .15s;white-space:nowrap;
+}
+.bnav-btn .icon{font-size:18px;line-height:1;}
+.bnav-btn.active{background:rgba(255,196,67,0.12);color:var(--amber);}
+
+/* ======== MAIN LAYOUT ======== */
+#wrap{max-width:1100px;margin:0 auto;padding:70px 12px 90px;}
+
+/* ======== SECTION HEADER ======== */
+.sh{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.sh h2{font-family:var(--font);font-size:1.5rem;font-weight:700;}
+.sh .sub{color:var(--text2);font-size:0.85rem;margin-top:2px;}
+
+/* ======== LEVEL CHIPS ======== */
+.level-row{display:flex;gap:6px;}
+.lv-btn{font-size:0.78rem;padding:6px 14px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--text2);font-weight:600;transition:all .15s;}
+.lv-btn.active{background:var(--teal);color:#000;border-color:var(--teal);}
+
+/* ======== PANEL ======== */
+.panel{display:none;}
+.panel.active{display:block;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ======== CARD ======== */
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--rad);padding:20px;margin-bottom:14px;}
+.card.highlight{border-color:rgba(255,196,67,0.3);}
+.tag{font-family:var(--mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--amber);margin-bottom:8px;display:block;}
+.tag.teal{color:var(--teal);}
+.tag.violet{color:var(--violet);}
+.tag.rose{color:var(--rose);}
+.tag.coral{color:var(--coral);}
+
+/* ======== BUTTONS ======== */
+.btn{font-family:var(--font);font-weight:600;font-size:0.82rem;padding:9px 16px;border-radius:var(--rad-sm);border:1px solid transparent;cursor:pointer;transition:transform .12s,opacity .12s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn:hover{transform:translateY(-1px);}
+.btn:active{transform:translateY(0);}
+.btn.amber{background:var(--amber);color:#000;border-color:var(--amber);}
+.btn.teal{background:var(--teal);color:#000;}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--text);}
+.btn.ghost:hover{border-color:var(--text2);}
+.btn.rose{background:var(--rose);color:#000;}
+.btn.violet{background:var(--violet);color:#000;}
+.btn.coral{background:var(--coral);color:#fff;}
+.btn.sky{background:var(--sky);color:#000;}
+.btn.green{background:var(--green);color:#000;}
+.btn.sm{font-size:0.72rem;padding:5px 10px;}
+.btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;}
+
+/* ======== INPUTS ======== */
+input[type=text],textarea{width:100%;background:var(--ink);border:1px solid var(--line);color:var(--text);border-radius:var(--rad-sm);padding:11px 14px;font-size:0.95rem;transition:border-color .15s;}
+input[type=text]:focus,textarea:focus{border-color:var(--teal);outline:none;}
+textarea{resize:vertical;min-height:90px;}
+
+/* ======== FEEDBACK ======== */
+.fb{margin-top:12px;padding:12px 16px;border-radius:var(--rad-sm);font-size:0.85rem;line-height:1.6;display:none;font-family:var(--body);}
+.fb.show{display:block;}
+.fb.good{background:rgba(74,222,128,0.1);border:1px solid var(--green);color:var(--green);}
+.fb.bad{background:rgba(255,92,92,0.1);border:1px solid var(--coral);color:var(--coral);}
+.fb.neutral{background:var(--ink3);border:1px solid var(--line);color:var(--text2);}
+.fb.info{background:rgba(94,196,255,0.08);border:1px solid var(--sky);color:var(--sky);}
+
+/* ======== QUIZ OPTS ======== */
+.quiz-opts{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.quiz-opt{
+  border:1px solid var(--line);border-radius:var(--rad-sm);padding:11px 14px;cursor:pointer;
+  font-size:0.9rem;transition:all .15s;text-align:left;background:transparent;color:var(--text);
+  display:flex;align-items:center;gap:10px;
+}
+.quiz-opt:hover{border-color:var(--teal);background:rgba(46,236,198,0.05);}
+.quiz-opt.correct{border-color:var(--green);background:rgba(74,222,128,0.1);color:var(--green);}
+.quiz-opt.wrong{border-color:var(--coral);background:rgba(255,92,92,0.08);color:var(--coral);}
+.opt-letter{width:24px;height:24px;border-radius:6px;background:var(--ink3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.7rem;flex-shrink:0;}
+
+/* ======== PASSAGE ======== */
+.passage{
+  background:#141F30;border:1px solid var(--line);border-radius:var(--rad-sm);
+  padding:18px;font-size:1rem;line-height:1.8;color:var(--text);margin:12px 0;
+}
+.blank{
+  display:inline-block;min-width:70px;border-bottom:2px dashed var(--amber2);
+  text-align:center;color:var(--amber);cursor:pointer;padding:0 4px;font-weight:600;
+}
+
+/* ======== PROGRESS BAR ======== */
+.prog-bar{height:5px;border-radius:3px;background:var(--ink3);overflow:hidden;margin-top:10px;}
+.prog-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--teal2));border-radius:3px;transition:width .5s ease;}
+
+/* ======== BADGE / POINTS POP ======== */
+#pointsPop{
+  position:fixed;top:70px;right:16px;z-index:200;
+  background:var(--amber);color:#000;font-family:var(--font);font-weight:700;
+  padding:10px 18px;border-radius:40px;font-size:0.95rem;
+  transform:translateY(-20px);opacity:0;transition:all .3s;pointer-events:none;
+}
+#pointsPop.show{transform:translateY(0);opacity:1;}
+
+/* ======== FLASHCARD ======== */
+.flashcard-scene{perspective:900px;width:100%;max-width:380px;height:200px;margin:0 auto 14px;}
+.flashcard-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d;cursor:pointer;}
+.flashcard-inner.flipped{transform:rotateY(180deg);}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--rad);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;}
+.fc-front{background:linear-gradient(135deg,#1E3250,#0D1D30);border:1px solid rgba(46,236,198,0.2);}
+.fc-back{background:linear-gradient(135deg,#2A1E40,#1A0D30);border:1px solid rgba(167,139,255,0.2);transform:rotateY(180deg);}
+.fc-word{font-family:var(--font);font-size:1.6rem;font-weight:700;color:var(--teal);}
+.fc-pos{font-family:var(--mono);font-size:0.65rem;color:var(--text3);margin-top:6px;}
+.fc-hint{font-size:0.75rem;color:var(--text3);margin-top:10px;}
+.fc-meaning{font-size:1rem;color:var(--text);font-weight:600;}
+.fc-example{font-size:0.82rem;color:var(--text2);font-style:italic;margin-top:8px;line-height:1.5;}
+
+/* ======== GRID LAYOUTS ======== */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+@media(max-width:700px){.two-col,.three-col{grid-template-columns:1fr;}}
+.gram-split{display:grid;grid-template-columns:220px 1fr;gap:16px;}
+@media(max-width:750px){.gram-split{grid-template-columns:1fr;}}
+
+/* ======== WORD MATCH GAME ======== */
+.match-board{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:500px;margin:0 auto;}
+.match-tile{
+  border:1px solid var(--line);border-radius:var(--rad-sm);padding:11px 14px;text-align:center;
+  cursor:pointer;font-size:0.9rem;transition:all .2s;background:var(--ink3);
+}
+.match-tile:hover{border-color:var(--teal);}
+.match-tile.selected{border-color:var(--amber);background:rgba(255,196,67,0.1);color:var(--amber);}
+.match-tile.matched{border-color:var(--green);background:rgba(74,222,128,0.12);color:var(--green);cursor:default;}
+.match-tile.wrong-flash{border-color:var(--coral);background:rgba(255,92,92,0.12);animation:wrongFlash .3s;}
+@keyframes wrongFlash{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}};
+
+/* ======== WORD SCRAMBLE ======== */
+.scramble-letters{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0;}
+.scram-letter{
+  width:38px;height:38px;border-radius:8px;background:var(--ink3);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font);font-weight:700;
+  font-size:1.1rem;cursor:pointer;transition:all .15s;user-select:none;
+}
+.scram-letter:hover{border-color:var(--amber);background:rgba(255,196,67,0.1);}
+.scram-letter.picked{opacity:0.3;cursor:default;}
+.answer-slots{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:10px 0;}
+.answer-slot{
+  width:38px;height:38px;border-radius:8px;background:transparent;border:2px dashed var(--line);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font);font-weight:700;
+  font-size:1.1rem;cursor:pointer;transition:all .15s;
+}
+.answer-slot.filled{border-color:var(--teal);background:rgba(46,236,198,0.1);color:var(--teal);}
+
+/* ======== TYPING SPEED CHALLENGE ======== */
+.type-display{
+  background:#141F30;border:1px solid var(--line);border-radius:var(--rad-sm);
+  padding:18px;font-size:1.05rem;line-height:1.9;letter-spacing:0.01em;margin:12px 0;
+}
+.type-char.correct{color:var(--green);}
+.type-char.wrong{color:var(--coral);text-decoration:underline;}
+.type-char.current{border-bottom:2px solid var(--amber);animation:blink .7s infinite;}
+@keyframes blink{50%{border-bottom-color:transparent;}}
+.type-char.pending{color:var(--text3);}
+
+/* ======== ROLEPLAY ======== */
+.chat-bubble{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;}
+.chat-bubble.me{flex-direction:row-reverse;}
+.bubble-ava{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.bubble-ava.other{background:var(--ink3);}
+.bubble-ava.me{background:rgba(255,196,67,0.2);}
+.bubble-txt{
+  max-width:80%;background:var(--ink3);border-radius:12px;padding:10px 14px;
+  font-size:0.9rem;line-height:1.5;
+}
+.bubble-txt.me{background:rgba(255,196,67,0.1);border:1px solid rgba(255,196,67,0.2);}
+.bubble-who{font-family:var(--mono);font-size:0.6rem;color:var(--text3);margin-bottom:3px;}
+
+/* ======== PRONUNCIATION MIC ======== */
+.pron-row{display:flex;align-items:center;gap:10px;padding:12px;background:var(--ink3);border-radius:var(--rad-sm);margin-bottom:8px;}
+.pron-word{font-family:var(--font);font-weight:700;font-size:1rem;min-width:130px;}
+.pron-ipa{font-family:var(--mono);font-size:0.75rem;color:var(--teal);min-width:90px;}
+.pron-note{font-size:0.8rem;color:var(--text2);flex:1;}
+
+/* ======== EMOJI REACTION ======== */
+.emoji-react{font-size:2rem;text-align:center;margin:8px 0;animation:popIn .4s cubic-bezier(.36,1.6,.54,1);}
+@keyframes popIn{from{transform:scale(0);}to{transform:scale(1);}}
+
+/* ======== STREAK FLAME ======== */
+.streak-anim{display:inline-block;animation:flame 1.2s ease-in-out infinite alternate;}
+@keyframes flame{from{transform:scale(1) rotate(-2deg);}to{transform:scale(1.15) rotate(2deg);}}
+
+/* ======== SCENARIO CHIPS ======== */
+.chip-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.chip{font-size:0.78rem;padding:6px 13px;border-radius:20px;border:1px solid var(--line);cursor:pointer;background:transparent;color:var(--text2);font-weight:600;white-space:nowrap;transition:all .15s;}
+.chip.active{background:var(--violet);color:#fff;border-color:var(--violet);}
+
+/* ======== TRUTH / LIE ======== */
+.tl-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+@media(max-width:600px){.tl-cards{grid-template-columns:1fr;}}
+.tl-card{border:1px solid var(--line);border-radius:var(--rad-sm);padding:16px;cursor:pointer;transition:all .15s;text-align:center;font-size:0.9rem;line-height:1.5;}
+.tl-card:hover{border-color:var(--amber);}
+.tl-card.truth-revealed{border-color:var(--green);background:rgba(74,222,128,0.08);}
+.tl-card.lie-revealed{border-color:var(--coral);background:rgba(255,92,92,0.08);}
+
+/* ======== STORY BUILDER ======== */
+.story-words{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0;}
+.story-word{font-size:0.82rem;padding:5px 10px;border-radius:20px;background:var(--ink3);border:1px solid var(--teal);color:var(--teal);cursor:pointer;font-weight:600;transition:all .15s;}
+.story-word:hover{background:rgba(46,236,198,0.15);}
+.story-word.used{opacity:0.35;cursor:default;}
+.story-output{min-height:60px;background:var(--ink);border:1px solid var(--line);border-radius:var(--rad-sm);padding:12px;font-size:0.95rem;line-height:1.6;}
+
+/* ======== IDIOM CARD FLIP ======== */
+.idiom-flip-scene{perspective:700px;height:120px;cursor:pointer;margin-bottom:10px;}
+.idiom-flip-inner{position:relative;height:100%;transition:transform .45s;transform-style:preserve-3d;}
+.idiom-flip-inner.flipped{transform:rotateY(180deg);}
+.idiom-front,.idiom-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--rad-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;text-align:center;}
+.idiom-front{background:var(--ink3);border:1px solid var(--line);}
+.idiom-back{background:rgba(46,236,198,0.06);border:1px solid rgba(46,236,198,0.3);transform:rotateY(180deg);}
+
+/* ======== EMAIL BUILDER ======== */
+.email-part{margin-bottom:12px;}
+.email-part label{font-family:var(--mono);font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:4px;}
+.email-options{display:flex;gap:6px;flex-wrap:wrap;}
+.email-opt{font-size:0.82rem;padding:6px 12px;border-radius:20px;border:1px solid var(--line);cursor:pointer;background:transparent;color:var(--text2);transition:all .15s;}
+.email-opt:hover{border-color:var(--sky);}
+.email-opt.selected{background:rgba(94,196,255,0.1);border-color:var(--sky);color:var(--sky);}
+.email-preview{background:#141F30;border:1px solid var(--line);border-radius:var(--rad-sm);padding:16px;font-size:0.9rem;line-height:1.7;min-height:120px;white-space:pre-line;color:var(--text);}
+
+/* ======== SPEAKING meter ======== */
+.mic-ring{
+  width:64px;height:64px;border-radius:50%;border:3px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  transition:all .3s;cursor:pointer;
+}
+.mic-ring.listening{border-color:var(--coral);background:rgba(255,92,92,0.1);animation:micPulse 1s infinite;}
+@keyframes micPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,92,92,0.4);}50%{box-shadow:0 0 0 12px rgba(255,92,92,0);}}
+
+/* ======== COMPREHENSION TIMER ======== */
+.timer-ring-wrap{position:relative;width:52px;height:52px;flex-shrink:0;}
+.timer-ring-wrap svg{transform:rotate(-90deg);}
+.timer-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:0.75rem;font-weight:600;color:var(--amber);}
+
+/* ======== GRAMMAR LIST ======== */
+.gram-topic{text-align:left;border:1px solid var(--line);background:var(--ink3);color:var(--text2);padding:10px 13px;border-radius:var(--rad-sm);cursor:pointer;font-size:0.85rem;width:100%;transition:all .15s;display:block;margin-bottom:6px;}
+.gram-topic.active{border-color:var(--amber);color:var(--text);}
+.gram-topic .sc{font-family:var(--mono);font-size:0.6rem;color:var(--teal);display:block;margin-top:3px;}
+
+/* ======== ACCENT TIPS ======== */
+.accent-tip{background:rgba(255,126,179,0.06);border-left:3px solid var(--rose);padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0;font-size:0.85rem;color:var(--text);}
+.accent-tip strong{color:var(--rose);}
+.info-tip{background:rgba(255,196,67,0.06);border-left:3px solid var(--amber);padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0;font-size:0.85rem;color:var(--text);}
+.info-tip strong{color:var(--amber);}
+
+/* ======== DASHBOARD ======== */
+.hero-dash{text-align:center;padding:28px 16px 36px;}
+.hero-dash h1{font-family:var(--font);font-size:clamp(1.6rem,5vw,2.6rem);font-weight:700;line-height:1.15;margin-bottom:12px;}
+.hero-dash h1 em{color:var(--amber);font-style:normal;}
+.hero-dash .lead{color:var(--text2);font-size:0.95rem;max-width:520px;margin:0 auto 22px;line-height:1.65;}
+.module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
+.mod-tile{
+  border:1px solid var(--line);border-radius:var(--rad);padding:18px 14px;
+  cursor:pointer;transition:all .2s;background:var(--ink2);text-align:center;
+}
+.mod-tile:hover{border-color:var(--amber);transform:translateY(-2px);}
+.mod-tile .mi{font-size:28px;margin-bottom:8px;}
+.mod-tile h3{font-family:var(--font);font-size:0.9rem;font-weight:700;margin-bottom:4px;}
+.mod-tile p{color:var(--text3);font-size:0.72rem;line-height:1.4;}
+.xp-bar{height:6px;border-radius:3px;background:var(--ink3);overflow:hidden;margin-top:10px;}
+.xp-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--amber2));border-radius:3px;}
+
+.daily-goals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+@media(max-width:500px){.daily-goals{grid-template-columns:1fr 1fr;}}
+.goal-card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--rad-sm);padding:14px;text-align:center;}
+.goal-card .goal-n{font-family:var(--font);font-size:1.5rem;font-weight:700;color:var(--teal);}
+.goal-card .goal-n.done{color:var(--amber);}
+.goal-card p{font-size:0.72rem;color:var(--text3);margin-top:2px;}
+
+/* ======== TONGUE TWISTER ======== */
+.tt-card{background:linear-gradient(135deg,rgba(167,139,255,0.1),rgba(94,196,255,0.08));border:1px solid rgba(167,139,255,0.3);border-radius:var(--rad);padding:22px;margin-bottom:14px;text-align:center;}
+.tt-phrase{font-family:var(--font);font-size:1.2rem;font-weight:700;margin:10px 0;line-height:1.4;}
+.tt-tip{font-size:0.82rem;color:var(--text2);margin-bottom:12px;}
+.speed-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+/* ======== SITUATION SELECTOR ======== */
+.sit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+.sit-tile{border:1px solid var(--line);border-radius:var(--rad-sm);padding:14px;cursor:pointer;text-align:center;transition:all .15s;background:var(--ink2);}
+.sit-tile:hover,.sit-tile.active{border-color:var(--violet);background:rgba(167,139,255,0.08);}
+.sit-tile .si{font-size:24px;margin-bottom:6px;}
+.sit-tile p{font-size:0.75rem;color:var(--text2);}
+
+/* ======== FILL BLANK INPUT ======== */
+.fill-input{display:inline-block;border:none;border-bottom:2px dashed var(--amber);background:transparent;color:var(--amber);font-size:inherit;font-family:inherit;min-width:80px;text-align:center;outline:none;padding:2px 4px;}
+.fill-input::placeholder{color:var(--amber2);opacity:0.7;}
+
+/* ======== TABLES ======== */
+.data-table{width:100%;border-collapse:collapse;font-size:0.85rem;margin:12px 0;}
+.data-table th{font-family:var(--mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);padding:8px 12px;text-align:left;border-bottom:1px solid var(--line);}
+.data-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:rgba(255,255,255,0.02);}
+
+/* ======== SPEAKING CHALLENGE ======== */
+.challenge-bar{display:flex;gap:10px;align-items:center;margin:14px 0;}
+.challenge-score{font-family:var(--font);font-size:2rem;font-weight:700;color:var(--amber);}
+.challenge-label{font-size:0.8rem;color:var(--text2);}
+
+/* ======== SMALL ======== */
+.small{font-size:0.75rem;color:var(--text3);font-family:var(--mono);}
+.mt-sm{margin-top:8px;}
+.mt-md{margin-top:14px;}
+.mt-lg{margin-top:22px;}
+.mb-sm{margin-bottom:8px;}
+.flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.spacer{flex:1;}
+
+/* ======== COMPLETION BADGE ======== */
+.done-badge{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:0.65rem;color:var(--green);background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);padding:3px 8px;border-radius:20px;}
+
+/* ======== VOCAB CATEGORY TABS ======== */
+.cat-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;scrollbar-width:none;}
+.cat-scroll::-webkit-scrollbar{display:none;}
+.cat-chip{font-size:0.75rem;padding:6px 14px;border-radius:20px;border:1px solid var(--line);cursor:pointer;background:transparent;color:var(--text2);font-weight:600;white-space:nowrap;transition:all .15s;}
+.cat-chip.active{background:var(--teal);color:#000;border-color:var(--teal);}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="tb-main">
+    <div class="logo"><div class="logo-icon">🏢</div>WorkEnglish Lab</div>
+    <div class="tb-stats">
+      <div class="stat-chip streak"><span class="streak-anim">🔥</span> <b id="statStreak">0</b>d</div>
+      <div class="stat-chip">⭐ <b id="statPts">0</b></div>
+      <div class="stat-chip" id="voiceChip" style="cursor:pointer" title="Toggle voice">🎤 <b id="voiceLabel">♀</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- POINTS POP -->
+<div id="pointsPop">+0 pts 🎉</div>
+
+<!-- MAIN CONTENT -->
+<div id="wrap">
+  <!-- panels will be injected here -->
+</div>
+
+<!-- BOTTOM NAV -->
+<div id="bottomNav">
+  <button class="bnav-btn active" data-tab="dash"><span class="icon">🏠</span>Home</button>
+  <button class="bnav-btn" data-tab="listen"><span class="icon">🎧</span>Listen</button>
+  <button class="bnav-btn" data-tab="speak"><span class="icon">🎤</span>Speak</button>
+  <button class="bnav-btn" data-tab="read"><span class="icon">📖</span>Read</button>
+  <button class="bnav-btn" data-tab="write"><span class="icon">✍️</span>Write</button>
+  <button class="bnav-btn" data-tab="vocab"><span class="icon">💬</span>Vocab</button>
+  <button class="bnav-btn" data-tab="grammar"><span class="icon">📐</span>Grammar</button>
+  <button class="bnav-btn" data-tab="games"><span class="icon">🎮</span>Games</button>
+  <button class="bnav-btn" data-tab="speak2"><span class="icon">🧑‍💼</span>Interview</button>
+  <button class="bnav-btn" data-tab="pron"><span class="icon">🗣️</span>Accent</button>
+  <button class="bnav-btn" data-tab="roleplay"><span class="icon">🎭</span>Roleplay</button>
+</div>
+
+<script>
+/* ============================================================
+   STATE & STORAGE
+============================================================ */
+const SK = "wel3-state";
+let S = {
+  tab:"dash", level:"Beginner", voiceGender:"girl",
+  pts:0, streak:0, lastDate:null,
+  done:{}, // key:true
+  vocabKnown:{},
+  gramTopic:"tense",
+  flashDeck:"Meetings", flashIdx:0,
+  scenarioId:"meeting",
+  matchState:null,
+  scrambleState:null,
+  typeState:null,
+  emailState:{greeting:null,body:null,close:null},
+  storyWords:[],
+  idiomFlips:{},
+  fillStates:{},
+  interviewIdx:0,
+};
+
+async function loadState(){
+  try{
+    const r = await window.storage.get(SK);
+    if(r&&r.value){ const d=JSON.parse(r.value); Object.assign(S,d); }
+  }catch(e){}
+  checkStreak();
+  render();
+}
+async function save(){
+  try{ await window.storage.set(SK, JSON.stringify(S)); }catch(e){}
+}
+function today(){ return new Date().toISOString().slice(0,10); }
+function checkStreak(){
+  const t=today();
+  if(S.lastDate===t) return;
+  const last=S.lastDate?new Date(S.lastDate):null;
+  const now=new Date(t);
+  if(last){ const d=Math.round((now-last)/86400000); S.streak=d===1?S.streak+1:1; }
+  else S.streak=1;
+  S.lastDate=t; save();
+}
+function addPts(n, label=""){
+  S.pts+=n; save();
+  const pop=document.getElementById("pointsPop");
+  pop.textContent=`+${n} pts ${n>=15?"🎉":n>=10?"✨":""}`;
+  pop.classList.add("show");
+  setTimeout(()=>pop.classList.remove("show"),1800);
+  document.getElementById("statPts").textContent=S.pts;
+}
+function markDone(key,pts=10){
+  if(!S.done[key]){ S.done[key]=true; addPts(pts); save(); }
+}
+
+/* ============================================================
+   VOICE
+============================================================ */
+let voiceGender="girl";
+function speak(text, rate=0.88){
+  if(!window.speechSynthesis){ return; }
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=rate;
+  const vv=window.speechSynthesis.getVoices();
+  if(voiceGender==="girl"){
+    u.voice=vv.find(v=>/en-IN/i.test(v.lang)&&/female|heera|raveena/i.test(v.name))
+      ||vv.find(v=>/en-IN/i.test(v.lang))
+      ||vv.find(v=>/en/i.test(v.lang)&&/female|samantha|karen|moira|zira/i.test(v.name))
+      ||vv.find(v=>/en/i.test(v.lang))||null;
+    u.pitch=1.1; u.lang="en-IN";
+  } else {
+    u.voice=vv.find(v=>/en/i.test(v.lang)&&/male|daniel|david|mark/i.test(v.name))||null;
+    u.pitch=0.85; u.lang="en-US";
+  }
+  window.speechSynthesis.speak(u);
+}
+if(window.speechSynthesis) window.speechSynthesis.onvoiceschanged=()=>{};
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+function render(){
+  document.getElementById("statStreak").textContent=S.streak;
+  document.getElementById("statPts").textContent=S.pts;
+  document.getElementById("voiceLabel").textContent=voiceGender==="girl"?"♀":"♂";
+  document.querySelectorAll(".bnav-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===S.tab));
+  const wrap=document.getElementById("wrap");
+  wrap.innerHTML=`<div class="panel active" id="root"></div>`;
+  const root=document.getElementById("root");
+  const fn={
+    dash:dashPanel, listen:listenPanel, speak:speakPanel,
+    read:readPanel, write:writePanel, vocab:vocabPanel,
+    grammar:grammarPanel, games:gamesPanel, speak2:interviewPanel,
+    pron:pronPanel, roleplay:roleplayPanel
+  };
+  if(fn[S.tab]) root.innerHTML=fn[S.tab]();
+  bind();
+}
+function goTab(t){ S.tab=t; render(); window.scrollTo({top:0,behavior:"smooth"}); }
+
+/* ============================================================
+   LEVEL SELECTOR HTML
+============================================================ */
+const LEVELS=["Beginner","Intermediate","Advanced"];
+function lvHTML(){
+  return `<div class="level-row">${LEVELS.map(l=>`<button class="lv-btn ${S.level===l?"active":""}" data-lv="${l}">${l}</button>`).join("")}</div>`;
+}
+
+/* ============================================================
+   DATA
+============================================================ */
+const LISTEN=[
+  {lv:"Beginner",title:"Morning briefing",audio:"Good morning everyone. Today we have three main goals: complete the client review, send the weekly report, and attend the product demo at three PM. Please make sure you are on time.",blanks:["review","report","demo","time"],q:[{q:"How many goals are there today?",opts:["Two","Three","Four"],a:1},{q:"What time is the product demo?",opts:["Two PM","Three PM","Four PM"],a:1}]},
+  {lv:"Beginner",title:"A voicemail",audio:"Hi, this is Amit calling from HR. I wanted to let you know that your orientation will be on Monday at nine AM in conference room B. Please bring a photo ID and your joining documents.",blanks:["orientation","Monday","conference","documents"],q:[{q:"Who is calling?",opts:["A manager","HR","A client"],a:1},{q:"What should you bring?",opts:["Laptop only","Photo ID and joining documents","Only documents"],a:1}]},
+  {lv:"Beginner",title:"Office rules",audio:"Please remember that the pantry closes at six PM. All visitors must sign in at the front desk. Mobile phones should be on silent during meetings. The Wi-Fi password is posted on the notice board.",blanks:["pantry","visitors","silent","notice"],q:[{q:"When does the pantry close?",opts:["Five PM","Six PM","Seven PM"],a:1},{q:"Where is the Wi-Fi password?",opts:["In an email","On the notice board","With the receptionist"],a:0}]},
+  {lv:"Intermediate",title:"Project update",audio:"The project is currently two weeks behind schedule due to delays in the vendor delivery. We have already escalated this to the procurement team and expect to receive the components by Friday. After that, testing will begin immediately and we plan to deliver by the end of the month.",blanks:["schedule","vendor","procurement","testing"],q:[{q:"Why is the project delayed?",opts:["Team shortage","Vendor delivery delay","Budget cut"],a:1},{q:"When is delivery expected?",opts:["End of week","End of month","Next month"],a:1}]},
+  {lv:"Intermediate",title:"Performance review",audio:"Your targets for this quarter were met in three out of four areas. Your client satisfaction scores improved significantly, which is fantastic. However, we would like to see stronger ownership of documentation going forward. I will share detailed written feedback by Friday.",blanks:["targets","satisfaction","documentation","feedback"],q:[{q:"How many areas were targets met in?",opts:["Two","Three","Four"],a:1},{q:"What needs improvement?",opts:["Client communication","Documentation ownership","Sales targets"],a:1}]},
+  {lv:"Advanced",title:"Board strategy briefing",audio:"Despite headwinds in the first half, our adjusted EBITDA margins expanded by forty basis points, driven primarily by operational efficiency gains and a favorable geographic mix. We expect this momentum to continue if macro conditions stabilise, though we remain cautious on the demand outlook for the next two quarters.",blanks:["EBITDA","operational","geographic","cautious"],q:[{q:"What improved margins?",opts:["New products","Operational efficiency","Higher prices"],a:1},{q:"What is the outlook for next two quarters?",opts:["Very optimistic","Cautious","Very negative"],a:1}]},
+  {lv:"Advanced",title:"Crisis communication",audio:"I want to address the situation head on. The data breach affected approximately twelve thousand customer accounts. We have already notified all affected users, engaged a third-party security firm, and implemented additional authentication protocols. Our top priority right now is restoring customer trust.",blanks:["breach","notified","authentication","trust"],q:[{q:"How many accounts were affected?",opts:["Ten thousand","Twelve thousand","Twenty thousand"],a:1},{q:"What is the top priority?",opts:["Fixing the system","Restoring customer trust","Informing regulators"],a:1}]},
+];
+
+const SPEAK=[
+  {lv:"Beginner",ph:"Good morning! Could you help me find the meeting room?",tip:"Keep your voice up at the end — it's a polite question.",acc:"'Could you' sounds like 'kud-joo' when spoken naturally. Don't say each word separately."},
+  {lv:"Beginner",ph:"I will send you the report by end of day.",tip:"Stress 'send' and 'report' — these carry the most meaning.",acc:"'End of day' is often said as 'end-uh-day' in connected speech. Practice until it flows."},
+  {lv:"Beginner",ph:"Nice to meet you. I'm from the marketing team.",tip:"Smile while you speak — it softens your tone naturally.",acc:"'Marketing' — stress the first syllable: MAR-ke-ting, not mar-KET-ing."},
+  {lv:"Beginner",ph:"Sorry, could you repeat that more slowly please?",tip:"'Slowly please' at the end sounds very polite and natural.",acc:"Many Indian speakers merge 'slowly' into 'slowlee'. Try to enunciate all three syllables: slow-lee."},
+  {lv:"Intermediate",ph:"I see your point, but I have a slightly different perspective.",tip:"Pause after 'point' to give the other person a moment.",acc:"'Perspective' is often mispronounced as 'perspectif'. End it with a clear 'v': per-SPEC-tive."},
+  {lv:"Intermediate",ph:"Could we schedule a quick call to align on this?",tip:"'Align on this' is natural business language — use it confidently.",acc:"'Schedule' — use SKED-yool for American clients, SHED-yool for British. Both are correct."},
+  {lv:"Intermediate",ph:"I'm afraid I won't be able to make Thursday's meeting.",tip:"'I'm afraid' softens bad news — always better than a flat 'no'.",acc:"Link 'I'm afraid' as one smooth phrase: aim-uh-FRAYD. Don't treat each word as separate."},
+  {lv:"Advanced",ph:"With respect, I'd push back on that assumption.",tip:"'With respect' is polite but firm — say it calmly, not defensively.",acc:"'Assumption' — stress the second syllable: a-SUMP-tion. Indian speakers sometimes stress the first."},
+  {lv:"Advanced",ph:"Let me level with you — the timeline isn't realistic as it stands.",tip:"'Level with you' signals honest directness. Pause before saying the real message.",acc:"'Realistic' — four syllables: ree-uh-LIS-tik. The middle is a light 'uh' sound, not 'a'."},
+  {lv:"Advanced",ph:"I'd like to circle back once we have the data to support this.",tip:"Keep this unhurried to sound senior. Rushing makes you seem anxious.",acc:"Reduce 'I'd like to' to a glide: I-d-lyke-tuh. Four words become one natural phrase."},
+];
+
+const READ=[
+  {lv:"Beginner",title:"Office memo",text:"All staff are reminded that parking passes for the new building must be collected from the security desk by this Friday. Please carry your employee ID card when collecting.",vocab:[{w:"reminded",d:"told again to remember something"},{w:"employee",d:"a person who works for a company"},{w:"collecting",d:"going to get something"}],q:[{q:"Where should passes be collected from?",opts:["HR desk","Security desk","Reception"],a:1},{q:"What must you carry?",opts:["Parking pass","Employee ID card","Both"],a:1}]},
+  {lv:"Beginner",title:"New employee guide",text:"Your first week at the company will include an orientation session, a meeting with your team lead, and access to our learning portal. Please complete the safety training module within three days of joining.",vocab:[{w:"orientation",d:"an introduction program for new employees"},{w:"portal",d:"a website where you can access resources"},{w:"module",d:"a section or unit of learning"}],q:[{q:"When must the safety training be done?",opts:["First day","Within three days","Within a week"],a:1},{q:"Who will you meet in the first week?",opts:["CEO","Team lead","Clients"],a:1}]},
+  {lv:"Intermediate",title:"Email policy update",text:"Effective from the first of next month, all external emails containing client data must be encrypted before sending. This applies to attachments over five megabytes. Failure to comply may result in a security audit of your account. If you need help setting up encryption, contact the IT helpdesk.",vocab:[{w:"encrypted",d:"converted into a secure coded form"},{w:"comply",d:"to follow the rules or instructions"},{w:"audit",d:"an official examination or check"}],q:[{q:"What emails must be encrypted?",opts:["All emails","External emails with client data","Internal emails only"],a:1},{q:"What happens if you don't comply?",opts:["Warning email","Security audit","Account deletion"],a:1}]},
+  {lv:"Intermediate",title:"Leading with questions",text:"The most effective managers rarely give orders. Instead, they ask questions that lead their team to discover answers themselves. This approach builds ownership, encourages critical thinking, and often results in more creative solutions than top-down directives.",vocab:[{w:"ownership",d:"a sense of personal responsibility for a task"},{w:"directives",d:"official orders or instructions"},{w:"critical thinking",d:"the ability to analyse and evaluate ideas carefully"}],q:[{q:"How do effective managers lead?",opts:["By giving orders","By asking questions","By micromanaging"],a:1},{q:"What does this approach encourage?",opts:["Speed","Critical thinking and ownership","Compliance"],a:1}]},
+  {lv:"Advanced",title:"Conflict as opportunity",text:"Workplace conflict, when managed constructively, can be a catalyst for innovation. Teams that avoid all disagreement tend to produce average ideas through conformity, while teams that navigate healthy debate often discover better solutions and build deeper mutual trust in the process.",vocab:[{w:"catalyst",d:"something that speeds up or triggers change"},{w:"conformity",d:"behaviour that matches group expectations"},{w:"constructively",d:"in a way that helps or improves a situation"}],q:[{q:"What can conflict produce when managed well?",opts:["More meetings","Innovation","Conformity"],a:1},{q:"What do teams that avoid disagreement tend to produce?",opts:["Bold ideas","Average ideas","Better solutions"],a:1}]},
+  {lv:"Advanced",title:"The art of the executive summary",text:"An executive summary should tell the reader what they need to decide and why, without requiring them to read the full report. The best executive summaries lead with the recommendation, follow with three to five supporting points, and close with a clear call to action. Length should never exceed one page.",vocab:[{w:"recommendation",d:"an advised course of action"},{w:"call to action",d:"a request for the reader to do something specific"},{w:"exceed",d:"to go beyond a limit"}],q:[{q:"What should an exec summary lead with?",opts:["Background","Recommendation","Data"],a:1},{q:"What is the maximum suggested length?",opts:["Half a page","One page","Two pages"],a:1}]},
+];
+
+const WRITE=[
+  {lv:"Beginner",title:"Write a self-introduction email",prompt:"You just joined a company. Write a short email (3-4 sentences) introducing yourself to the team. Include your name, your role, and one thing you're looking forward to.",checklist:["Friendly greeting","Your name and role","Positive closing"],sample:"Hi everyone,\n\nI'm Priya, joining today as a Business Analyst. I'm excited to be part of such a talented team and look forward to contributing to our upcoming projects.\n\nLooking forward to meeting everyone!\n\nBest,\nPriya"},
+  {lv:"Beginner",title:"Confirm a meeting by email",prompt:"Your manager asked if you can join a call tomorrow at 2 PM. Write a short 2-sentence confirmation email.",checklist:["Confirm attendance","Mention the time","Brief and polite"],sample:"Hi Shreya,\n\nThank you for the invite — I'll be on the call tomorrow at 2 PM.\n\nBest,\nRohan"},
+  {lv:"Beginner",title:"Leave request email",prompt:"You need to take two days leave next week. Write a short email requesting leave and mentioning the dates.",checklist:["State the request clearly","Mention the dates","Offer to hand over work"],sample:"Hi Anand,\n\nI'd like to request leave on Monday 15th and Tuesday 16th July for a personal matter. I'll ensure all pending work is wrapped up before I leave and will brief Kavya on anything that needs coverage.\n\nThanks,\nVinay"},
+  {lv:"Intermediate",title:"Decline a request politely",prompt:"A colleague asks you to take on an extra project this week, but you are at full capacity. Write an email declining politely and suggesting an alternative.",checklist:["Acknowledge the request","Briefly explain your situation","Offer a constructive alternative","Warm closing"],sample:"Hi Ritu,\n\nThanks for thinking of me for this. Unfortunately I'm at full capacity this week with the client deliverable, so I won't be able to take this on right now. Could we revisit this next week, or perhaps Suresh has some bandwidth?\n\nBest,\nDivya"},
+  {lv:"Intermediate",title:"Meeting summary email",prompt:"You just had a planning meeting. Write a short follow-up email summarising what was decided and next steps.",checklist:["Thank participants","State key decisions","List next steps with owners","Clear, structured format"],sample:"Hi team,\n\nThanks for a productive session today. Here's a quick summary:\n\nDecisions:\n- Launch date moved to 20th August\n- QA team will run a full regression cycle\n\nNext steps:\n- Nikhil: finalise test plan by Wednesday\n- Pooja: update the client by Friday\n\nThanks all,\nMeera"},
+  {lv:"Advanced",title:"Escalation email to leadership",prompt:"A supplier has been unresponsive for 10 days and it's blocking your project. Write a concise escalation email to your VP, explaining the issue, impact, and what you need from them.",checklist:["State the issue in the first line","Quantify the impact","Make a specific ask","Professional, not emotional tone"],sample:"Hi Vikram,\n\nI need to flag a blocking issue: supplier XYZ has been unresponsive for ten days despite three follow-up attempts, and this is now delaying our October launch by an estimated two weeks.\n\nI'd like your support in escalating through the procurement channel or approving an alternative vendor shortlist.\n\nHappy to brief you in a quick call today.\n\nThanks,\nArjun"},
+  {lv:"Advanced",title:"Persuasive business case",prompt:"Write a 4-5 sentence memo persuading leadership to invest in a new analytics tool costing $5,000 annually. Make a compelling ROI argument.",checklist:["Lead with the recommendation","Quantify the benefit","Address the cost objection","Clear call to action"],sample:"Recommendation: approve $5,000 annual licence for DataStream analytics.\n\nThe tool will cut manual reporting time from eight hours to under ninety minutes per week — saving approximately 330 staff hours annually, equivalent to roughly $8,200 at current rates. While the upfront cost may seem significant, the payback period is under eight months, and the freed capacity will flow directly into client-facing analysis.\n\nI'd like approval by Friday to onboard ahead of Q4 planning."},
+];
+
+const VOCAB_DATA={
+  "Meetings":[
+    {w:"agenda",pos:"n",m:"list of topics to discuss",ex:"Let's stick to the agenda."},
+    {w:"action item",pos:"n",m:"task assigned in a meeting",ex:"The action item is with Priya."},
+    {w:"circle back",pos:"v",m:"return to a topic later",ex:"Can we circle back after lunch?"},
+    {w:"touch base",pos:"v",m:"make brief contact to check in",ex:"Let's touch base before the call."},
+    {w:"bandwidth",pos:"n",m:"capacity or availability to take on work",ex:"I don't have the bandwidth this week."},
+    {w:"take offline",pos:"v",m:"discuss separately, not in the meeting",ex:"Let's take this offline — too detailed for now."},
+    {w:"on the same page",pos:"idiom",m:"having the same understanding",ex:"We need to make sure we're on the same page."},
+    {w:"table a topic",pos:"v",m:"postpone for later (UK/India) or raise now (US)",ex:"Can we table this for next week?"},
+    {w:"weigh in",pos:"v",m:"give your opinion on something",ex:"I'd love for finance to weigh in here."},
+    {w:"wrap up",pos:"v",m:"finish or conclude something",ex:"Let's wrap up — we're almost out of time."},
+  ],
+  "Emails":[
+    {w:"loop in",pos:"v",m:"add someone to an email thread",ex:"I'll loop in the legal team."},
+    {w:"reach out",pos:"v",m:"contact someone",ex:"Please reach out if you have questions."},
+    {w:"follow up",pos:"v",m:"check on progress after a message",ex:"Just following up on last week's email."},
+    {w:"per my last email",pos:"phrase",m:"referring back to a previous message",ex:"Per my last email, the deadline is Friday."},
+    {w:"flag",pos:"v",m:"highlight for attention",ex:"I wanted to flag a potential delay."},
+    {w:"on hold",pos:"adj",m:"paused temporarily",ex:"The project is on hold until approval."},
+    {w:"escalate",pos:"v",m:"raise to a higher authority",ex:"I'll escalate if there's no response."},
+    {w:"kindly",pos:"adv",m:"polite way to make a formal request",ex:"Kindly confirm your availability."},
+    {w:"cc",pos:"v",m:"send a copy to someone",ex:"Please CC me on that thread."},
+    {w:"revert",pos:"v",m:"used in India to mean 'reply'",ex:"Please revert by Thursday (Indian English)."},
+  ],
+  "Small Talk":[
+    {w:"how's it going",pos:"phrase",m:"casual greeting",ex:"Hey Rahul, how's it going?"},
+    {w:"long time no see",pos:"idiom",m:"said when you haven't met someone in a while",ex:"Long time no see! How was Bangalore?"},
+    {w:"catch up",pos:"v",m:"share recent news with someone",ex:"We should catch up over coffee."},
+    {w:"busy season",pos:"n",m:"a period of heavy workload",ex:"It's our busy season — things are hectic."},
+    {w:"no worries",pos:"phrase",m:"informal way to say it's fine",ex:"No worries, take your time!"},
+    {w:"keep you posted",pos:"phrase",m:"continue to update someone",ex:"I'll keep you posted on the outcome."},
+    {w:"small world",pos:"idiom",m:"unexpected connection discovered",ex:"You know Akanksha too? Small world!"},
+    {w:"out of the loop",pos:"idiom",m:"not informed about something",ex:"Sorry, I've been out of the loop."},
+    {w:"how was your weekend",pos:"phrase",m:"Monday morning opener",ex:"Hey! How was your weekend?"},
+    {w:"grab a coffee",pos:"phrase",m:"invite someone for an informal chat",ex:"Want to grab a coffee at eleven?"},
+  ],
+  "Negotiation":[
+    {w:"bottom line",pos:"n",m:"final or minimum acceptable position",ex:"Our bottom line is fifteen percent off."},
+    {w:"walk away",pos:"v",m:"leave without making a deal",ex:"If they won't budge, we'll walk away."},
+    {w:"sweeten the deal",pos:"idiom",m:"add extras to make an offer better",ex:"Could you sweeten the deal with free delivery?"},
+    {w:"meet halfway",pos:"idiom",m:"compromise between two positions",ex:"Can we meet halfway on the timeline?"},
+    {w:"ballpark figure",pos:"n",m:"rough estimate",ex:"Give me a ballpark figure for the cost."},
+    {w:"counter-offer",pos:"n",m:"response to an offer with a different proposal",ex:"We received their counter-offer today."},
+    {w:"good faith",pos:"n",m:"honest and sincere intent",ex:"We're making this concession in good faith."},
+    {w:"leverage",pos:"n",m:"advantage used to influence outcome",ex:"Our long relationship gives us leverage here."},
+    {w:"close the deal",pos:"phrase",m:"complete a negotiation successfully",ex:"Let's close the deal before Friday."},
+    {w:"non-negotiable",pos:"adj",m:"cannot be changed",ex:"The delivery date is non-negotiable."},
+  ],
+};
+
+const GRAMMAR=[
+  {id:"tense",title:"Present Perfect vs. Past Simple",short:"finished vs. now-relevant",
+   exp:"<b>Past Simple</b> = finished action at a specific time. <b>Present Perfect</b> = connected to now, or unspecified time.",
+   examples:["I sent the email yesterday. (specific past)","I have sent the email. (it's done — relevant now)","She has worked here for five years. (still working)","She worked here in 2019. (finished, she left)"],
+   quiz:[{q:"I ____ this client since 2021.",opts:["worked with","have worked with"],a:1},{q:"We ____ the contract last Friday.",opts:["have signed","signed"],a:1},{q:"____ you ever ____ to a board meeting?",opts:["Have / been","Did / went"],a:0}]},
+  {id:"articles",title:"a / an / the / (nothing)",short:"specific vs. general",
+   exp:"Use <b>a/an</b> for non-specific or first mention. Use <b>the</b> when both parties know exactly which one. Use <b>no article</b> for general ideas or department names.",
+   examples:["I sent an email. (non-specific, first mention)","Did you read the email I sent? (specific known one)","I work in Sales. (no article with departments)","Meetings usually start late. (general, plural)"],
+   quiz:[{q:"Did you review ____ proposal we discussed?",opts:["a","the"],a:1},{q:"We need ____ new hire for the team.",opts:["a","the"],a:0},{q:"____ feedback from users has been positive.",opts:["The","(no article)"],a:1}]},
+  {id:"modals",title:"Modal verbs for polite requests",short:"could / would / might",
+   exp:"'<b>Could</b> you' and '<b>Would</b> you mind' are softer than 'Can you'. '<b>Might</b>' makes suggestions tentative and respectful.",
+   examples:["Could you send that by Friday?","Would you mind reviewing this quickly?","We might want to consider another option.","Can you help? (casual; not ideal for clients)"],
+   quiz:[{q:"Most polite way to ask a client for a file:",opts:["Send me the file.","Would you mind sharing the file?"],a:1},{q:"____ you mind if I joined five minutes late?",opts:["Would","Do"],a:0},{q:"We ____ want to revisit this next month.",opts:["might","must"],a:0}]},
+  {id:"passive",title:"Active vs. Passive voice",short:"who did it vs. what happened",
+   exp:"<b>Active:</b> clear about who did what. <b>Passive:</b> focuses on the action, not the actor — useful for formal writing or softening bad news.",
+   examples:["Active: The team approved the budget. (direct)","Passive: The budget was approved. (formal, result-focused)","Passive: The order was delayed. (softer than 'We delayed it')","Active: I will submit the report by Monday. (clear commitment)"],
+   quiz:[{q:"More formal way to announce a decision:",opts:["We cancelled the event.","The event has been cancelled."],a:1},{q:"The client ____ about the delay. (passive, past)",opts:["informed","was informed"],a:1},{q:"Which is active voice?",opts:["The audit was completed by finance.","Finance completed the audit."],a:1}]},
+  {id:"conditionals",title:"Conditionals for work scenarios",short:"if...will vs. if...would",
+   exp:"<b>First conditional</b> (if + present, will + base): realistic plans. <b>Second conditional</b> (if + past, would + base): hypothetical.",
+   examples:["If the client agrees, we will start on Monday.","If I had more budget, I would hire two people.","If this doesn't work, we'll try another approach.","If I were the manager, I would change the process."],
+   quiz:[{q:"If we ____ the deadline, the client will escalate.",opts:["miss","missed"],a:0},{q:"If I ____ you, I would ask for an extension.",opts:["am","were"],a:1},{q:"If sales ____ 20%, we'll expand the team.",opts:["grow","grew"],a:0}]},
+  {id:"prepositions",title:"Prepositions of time at work",short:"on / in / at / by / since / for",
+   exp:"<b>on</b>: days/dates. <b>in</b>: months/years/periods. <b>at</b>: clock times. <b>by</b>: deadline. <b>since</b>: starting point. <b>for</b>: duration.",
+   examples:["Please send it by Friday.","I've worked here since 2021.","She's been on leave for two weeks.","The call is at 3 PM on Tuesday."],
+   quiz:[{q:"Please send this ____ EOD.",opts:["by","until"],a:0},{q:"I've been with the company ____ three years.",opts:["since","for"],a:1},{q:"The training starts ____ 9 AM.",opts:["at","on"],a:0}]},
+];
+
+const PRON=[
+  {word:"comfortable",india:"KOM-for-ta-bul",std:"KUMF-ter-bul",note:"3 syllables sounds more fluent globally."},
+  {word:"pronunciation",india:"pro-NOUN-see-ay-shun",std:"pruh-NUN-see-ay-shun",note:"The 'o' in the middle disappears. Root = pronounce."},
+  {word:"specifically",india:"spa-SIF-ik-lee",std:"spuh-SIF-ik-lee",note:"First vowel is a short schwa — not 'space'."},
+  {word:"colleague",india:"coll-EEG",std:"KOL-eeg",note:"Stress the FIRST syllable: COL-league."},
+  {word:"excel",india:"EX-sel",std:"ik-SEL",note:"Stress the second syllable — same for: explain, expand."},
+  {word:"actually",india:"AK-choo-lee",std:"AK-choo-uh-lee",note:"Three syllables, not two. Slow down in presentations."},
+  {word:"schedule",india:"SHED-yool",std:"SKED-yool",note:"SHED = British. SKED = American. Match your audience."},
+  {word:"development",india:"deh-VEL-up-ment",std:"dih-VEL-up-ment",note:"First vowel is a very short schwa, unstressed."},
+  {word:"particularly",india:"par-TIC-yoo-lar-lee",std:"puh-TIK-yuh-ler-lee",note:"Reduce the unstressed syllables — spoken faster than it looks."},
+  {word:"necessary",india:"ness-ESS-ary",std:"NES-uh-ser-ee",note:"Stress the first syllable in British English."},
+];
+
+const TONGUE_TWISTERS=[
+  {phrase:"She sells seashells at the seashore.",tip:"Focus on the 's' and 'sh' sounds — they are different. 's' is unvoiced hiss; 'sh' is softer."},
+  {phrase:"Unique New York, unique New York, you know you need unique New York.",tip:"Great for practising the 'y' sound in 'unique' and 'you'. Rhythm matters here."},
+  {phrase:"How can a clam cram in a clean cream can?",tip:"Practise the clean 'cl' and 'cr' blends. Indian speakers sometimes add a vowel before them."},
+  {phrase:"The thirty-three thieves thought that they thrilled the throne throughout Thursday.",tip:"Work on the 'th' sound — tip of tongue between or behind your top teeth. Not 'd'."},
+  {phrase:"Red lorry, yellow lorry.",tip:"The 'l' and 'r' alternation is great for British English rhythm training."},
+  {phrase:"Around the rugged rocks the ragged rascal ran.",tip:"Practise the clean English 'r' — not a rolled Indian 'r'. The tongue doesn't vibrate."},
+];
+
+const SCENARIOS=[
+  {id:"meeting",title:"Opening a meeting",lv:"Beginner",emoji:"📅",lines:[
+    {who:"Manager",txt:"Good morning everyone, thanks for joining. Shall we start?"},
+    {who:"You",txt:"Good morning. Yes, I think everyone's here — let's go ahead."},
+    {who:"Manager",txt:"Great. Can you quickly walk us through where things stand?"},
+    {who:"You",txt:"Sure. We're on track and should wrap up by end of week."},
+  ]},
+  {id:"phonecall",title:"Client complaint call",lv:"Intermediate",emoji:"📞",lines:[
+    {who:"Client",txt:"Hi, I'm calling about my order — it still hasn't arrived."},
+    {who:"You",txt:"I'm sorry to hear that. Let me check the status for you right now."},
+    {who:"Client",txt:"I've been waiting for two weeks — this isn't acceptable."},
+    {who:"You",txt:"I completely understand your frustration and I apologise. I can see it's delayed at our logistics hub. I'll personally ensure it's prioritised and will send you a tracking update within the hour."},
+  ]},
+  {id:"salary",title:"Salary negotiation",lv:"Advanced",emoji:"💰",lines:[
+    {who:"HR",txt:"We'd like to offer you the role at 14 lakhs CTC."},
+    {who:"You",txt:"Thank you — I'm genuinely excited about this opportunity. I was hoping for something closer to 16, given my background. Is there room to move?"},
+    {who:"HR",txt:"We have some flexibility. Can you help me understand the 16?"},
+    {who:"You",txt:"Of course. I'm currently at 13.5, and I bring three years of hands-on experience in this exact domain, plus a track record of delivering above target. I believe 16 reflects that value fairly."},
+  ]},
+  {id:"disagree",title:"Polite disagreement",lv:"Advanced",emoji:"🤝",lines:[
+    {who:"Colleague",txt:"I think we should push the launch to next week regardless of testing status."},
+    {who:"You",txt:"I see your point on timing, but I'd push back gently — launching without testing creates real risk for the client."},
+    {who:"Colleague",txt:"Fair. What would you suggest instead?"},
+    {who:"You",txt:"Give QA two more days, then launch with confidence. The short delay is much better than a post-launch fire."},
+  ]},
+  {id:"apology",title:"Apologising professionally",lv:"Intermediate",emoji:"🙏",lines:[
+    {who:"Manager",txt:"The client received the wrong deck — they're upset."},
+    {who:"You",txt:"I'm really sorry — that was my mistake. I sent the draft instead of the final version."},
+    {who:"Manager",txt:"How do we fix this?"},
+    {who:"You",txt:"I've already sent the correct file with a personal apology to the client. I've also set up a version naming system so this won't happen again."},
+  ]},
+  {id:"feedback",title:"Asking for feedback",lv:"Intermediate",emoji:"💬",lines:[
+    {who:"You",txt:"Do you have five minutes? I'd love your feedback on how I handled today's presentation."},
+    {who:"Manager",txt:"Sure. Overall really good — your structure was clear and the data was compelling."},
+    {who:"You",txt:"That's great to hear. Is there anything you'd like me to do differently next time?"},
+    {who:"Manager",txt:"One thing — pause a bit more after your key points. Let it breathe. The audience needs a moment to absorb."},
+  ]},
+  {id:"smalltalk",title:"Small talk before a meeting",lv:"Beginner",emoji:"☕",lines:[
+    {who:"Colleague",txt:"Hey! How was your weekend?"},
+    {who:"You",txt:"It was great — I went to a food festival on Sunday. How about yours?"},
+    {who:"Colleague",txt:"Pretty relaxed. Caught up on some reading. Ready for this one?"},
+    {who:"You",txt:"As ready as I'll ever be! Should be a good session."},
+  ]},
+];
+
+const INTERVIEW=[
+  {lv:"Beginner",q:"Tell me about yourself.",guide:"Present → Past → Future. Keep it under 90 seconds.",star:null,tips:["Start with your current role","Add 1-2 relevant strengths","End with why you want this role"],sample:"I'm currently a data analyst at a fintech firm, where I've spent the last two years building dashboards for the operations team. Before that, I was in e-commerce analytics. I'm drawn to this role because it combines my love of data with client-facing work, which is where I want to grow."},
+  {lv:"Beginner",q:"What is your biggest strength?",guide:"Pick one relevant strength. Give a specific example. Keep it to 30-40 seconds.",star:null,tips:["Choose what the job needs most","Always give proof — not just adjectives","One strength, done well, beats three vague ones"],sample:"My biggest strength is communicating data clearly to non-technical stakeholders. At my current role, I redesigned our weekly business review from a raw numbers dump into a visual summary that leadership could act on — it went from being skimmed to being the highlight of the Monday meeting."},
+  {lv:"Intermediate",q:"Tell me about a time you handled a difficult colleague.",guide:"Use STAR: Situation → Task → Action → Result.",star:{S:"Set the scene: where, when, who was involved.",T:"What were YOU responsible for in that moment?",A:"What exactly did you do? Focus on YOUR actions.",R:"What was the outcome? What did you learn?"},tips:["Stay professional — no bad-mouthing","Focus on your behaviour, not theirs","End on a positive or learning note"],sample:"A colleague and I had very different working styles — they preferred to improvise, I relied on structure (S). We were jointly responsible for a client presentation (T). I arranged a 20-minute one-on-one, shared my concern calmly, and we agreed on a hybrid: loose creative sessions early, then a structured review before delivery (A). The presentation went well and our manager used it as a case study (R)."},
+  {lv:"Intermediate",q:"Describe a time you failed or made a mistake.",guide:"Show self-awareness and recovery — not perfection.",star:{S:"What was the situation?",T:"What were you responsible for?",A:"What went wrong and what did you do to fix it?",R:"What did you change as a result?"},tips:["Choose a real but not catastrophic example","Don't over-apologise or over-explain","The 'result' should show growth"],sample:"Early in my career I underestimated the scope of a market sizing exercise (S). I was the lead on it and assumed I had more data than I did (T). I caught the gap the night before the deadline and worked through the night to fill it, but it still went out late (A). I now build in a structured scope check at the start of every project and have never missed a deadline since (R)."},
+  {lv:"Advanced",q:"Where do you see yourself in five years?",guide:"Show ambition. Tie your growth to the company's direction. Avoid sounding like you'll leave soon.",star:null,tips:["Research the company's roadmap first","Talk about contribution, not just titles","Make it about growth you can bring them"],sample:"In five years I'd like to be heading a data function — ideally here, given how fast you're scaling your analytics capability. I see the next two years as a time to deepen my domain knowledge in FMCG, build my stakeholder management skills, and take on cross-functional projects. By year three or four, I'd want to be the go-to person for translating commercial questions into data answers."},
+  {lv:"Advanced",q:"Why should we hire you over other candidates?",guide:"Be specific, confident, and evidence-based. This is your elevator pitch.",star:null,tips:["Reference the job description","Quantify your impact if possible","This is not the moment for excessive modesty"],sample:"Because I bring something that's hard to find at this level: strong analytical rigour combined with commercial instinct. I built a forecasting model at my current company that cut projection errors by 28%, and I presented it to the CFO in terms that led to a budget decision the same day. I've read your JD carefully — that exact combination of technical depth and business communication is what you're looking for, and it's genuinely what I do best."},
+];
+
+const IDIOMS=[
+  {phrase:"bite the bullet",meaning:"Accept something painful because it's unavoidable",ex:"We need to bite the bullet and cut costs."},
+  {phrase:"hit the ground running",meaning:"Start something energetically without a slow ramp-up",ex:"She hit the ground running and delivered in week one."},
+  {phrase:"on the back burner",meaning:"Set aside as lower priority for now",ex:"The new feature is on the back burner until Q3."},
+  {phrase:"read between the lines",meaning:"Understand the hidden or implied meaning",ex:"Read between the lines — the client isn't happy."},
+  {phrase:"elephant in the room",meaning:"An obvious problem everyone avoids discussing",ex:"The real elephant in the room is our churn rate."},
+  {phrase:"cut corners",meaning:"Do something poorly to save time or money",ex:"We can't cut corners on security compliance."},
+  {phrase:"bring to the table",meaning:"Offer skills or resources in a situation",ex:"What experience do you bring to the table?"},
+  {phrase:"move the needle",meaning:"Make a meaningful, measurable difference",ex:"This campaign actually moved the needle on awareness."},
+  {phrase:"low-hanging fruit",meaning:"Easy wins or quick gains available with little effort",ex:"Let's focus on the low-hanging fruit first."},
+  {phrase:"think outside the box",meaning:"Think creatively beyond conventional approaches",ex:"This problem needs us to think outside the box."},
+  {phrase:"game changer",meaning:"Something that fundamentally changes a situation",ex:"That acquisition was a real game changer for us."},
+  {phrase:"put all cards on the table",meaning:"Be completely honest and open",ex:"Let's put all cards on the table before we negotiate."},
+];
+
+// Word match game data
+const MATCH_SETS=[
+  {title:"Match the phrase to its meaning",pairs:[
+    {a:"circle back",b:"return to a topic later"},
+    {a:"touch base",b:"make brief contact"},
+    {a:"bandwidth",b:"capacity to do work"},
+    {a:"wrap up",b:"finish or conclude"},
+  ]},
+  {title:"Match the email phrase",pairs:[
+    {a:"loop in",b:"add to the email thread"},
+    {a:"flag",b:"highlight for attention"},
+    {a:"escalate",b:"raise to higher authority"},
+    {a:"reach out",b:"contact someone"},
+  ]},
+  {title:"Match the idiom",pairs:[
+    {a:"bite the bullet",b:"accept something painful"},
+    {a:"low-hanging fruit",b:"easy wins"},
+    {a:"move the needle",b:"make a real difference"},
+    {a:"game changer",b:"fundamentally changes things"},
+  ]},
+];
+
+// Fill in the blank sentences
+const FILL_SENTENCES=[
+  {lv:"Beginner",sentence:"Please ______ the report by end of day.",word:"send",options:["send","sent","sending"]},
+  {lv:"Beginner",sentence:"I am calling ______ the account manager.",word:"for",options:["for","about","from"]},
+  {lv:"Beginner",sentence:"Could you please ______ that again?",word:"repeat",options:["repeat","repeated","repeating"]},
+  {lv:"Intermediate",sentence:"I'll ______ on this and get back to you by Friday.",word:"follow up",options:["follow up","pick up","catch up"]},
+  {lv:"Intermediate",sentence:"We need to ______ the launch by two weeks due to testing.",word:"push back",options:["push back","pull forward","move up"]},
+  {lv:"Intermediate",sentence:"Could you ______ the legal team on this email?",word:"loop in",options:["loop in","bring in","let in"]},
+  {lv:"Advanced",sentence:"Our strategy has ______ our cost base significantly.",word:"optimised",options:["optimised","affected","restructured"]},
+  {lv:"Advanced",sentence:"We should ______ before making any assumptions about the data.",word:"validate",options:["validate","check","verify"]},
+];
+
+// Typing challenge sentences
+const TYPE_SENTENCES=[
+  {lv:"Beginner",text:"Please send me the document when you are ready."},
+  {lv:"Beginner",text:"The meeting is scheduled for Monday at ten AM."},
+  {lv:"Intermediate",text:"I appreciate your feedback and will incorporate it into the final version."},
+  {lv:"Intermediate",text:"Could you please loop in the design team on this thread?"},
+  {lv:"Advanced",text:"Our quarterly results reflect the strategic investments we have made in operational efficiency."},
+  {lv:"Advanced",text:"With respect, I would push back on that assumption pending further data."},
+];
+
+/* ============================================================
+   PANEL RENDERERS
+============================================================ */
+
+// ========== DASHBOARD ==========
+function dashPanel(){
+  const mods=[
+    {tab:"listen",icon:"🎧",name:"Listening",desc:"Fill-in-the-blank & comprehension"},
+    {tab:"speak",icon:"🎤",name:"Speaking",desc:"Say phrases aloud, get feedback"},
+    {tab:"read",icon:"📖",name:"Reading",desc:"Read passages, learn new words"},
+    {tab:"write",icon:"✍️",name:"Writing",desc:"Emails, memos, replies"},
+    {tab:"vocab",icon:"💬",name:"Vocabulary",desc:"Flashcards across 4 topics"},
+    {tab:"grammar",icon:"📐",name:"Grammar",desc:"6 grammar topics with quizzes"},
+    {tab:"games",icon:"🎮",name:"Games",desc:"Word match, scramble & typing"},
+    {tab:"speak2",icon:"🧑‍💼",name:"Interview",desc:"STAR method & model answers"},
+    {tab:"pron",icon:"🗣️",name:"Accent",desc:"Indian English coaching"},
+    {tab:"roleplay",icon:"🎭",name:"Roleplay",desc:"7 real workplace scenarios"},
+  ];
+  const totalDone=Object.keys(S.done).length;
+  const todayGoals=[
+    {n:S.streak,total:"∞",label:"Day streak",done:S.streak>0},
+    {n:Math.min(totalDone,5),total:5,label:"Activities done",done:totalDone>=5},
+    {n:Object.keys(S.vocabKnown).length,total:10,label:"Words learned",done:Object.keys(S.vocabKnown).length>=10},
+  ];
+  return `
+  <div class="hero-dash">
+    <div style="font-size:3rem;margin-bottom:8px;">🏢</div>
+    <h1>Speak workplace English<br>like it's <em>second nature</em></h1>
+    <p class="lead">Practice meetings, emails, calls, interviews, and negotiation — with pronunciation coaching tailored for Indian English speakers.</p>
+    <div class="btn-row" style="justify-content:center;margin-bottom:0;">
+      <button class="btn amber" onclick="goTab('listen')">🎧 Start listening</button>
+      <button class="btn teal" onclick="goTab('games')">🎮 Play games</button>
+      <button class="btn ghost" onclick="goTab('speak2')">🧑‍💼 Interview prep</button>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;">
+    <div class="sh"><div><h2>Today's goals</h2></div></div>
+    <div class="daily-goals">
+      ${todayGoals.map(g=>`<div class="goal-card"><div class="goal-n ${g.done?'done':''}">${g.n}</div><p>${g.label}</p></div>`).join("")}
+    </div>
+  </div>
+
+  <div class="sh"><h2>All modules</h2><span class="small">${totalDone} activities completed · ${S.pts} pts</span></div>
+  <div class="module-grid">
+    ${mods.map(m=>`
+    <div class="mod-tile" onclick="goTab('${m.tab}')">
+      <div class="mi">${m.icon}</div>
+      <h3>${m.name}</h3>
+      <p>${m.desc}</p>
+      <div class="xp-bar"><i style="width:${Math.min(100,Math.round(Object.keys(S.done).filter(k=>k.startsWith(m.tab)).length/3*100))}%"></i></div>
+    </div>`).join("")}
+  </div>
+  `;
+}
+
+// ========== LISTENING ==========
+function listenPanel(){
+  const items=LISTEN.filter(d=>d.lv===S.level);
+  return `
+  <div class="sh"><div><h2>🎧 Listening Lab</h2><div class="sub">${items.length} exercises · Press ▶ to hear, then fill in the blanks and answer questions.</div></div>${lvHTML()}</div>
+  ${items.map((it,i)=>{
+    const key=`listen-${S.level}-${i}`;
+    const blanked=it.blanks.reduce((t,w)=>t.replace(new RegExp(`\\b${w}\\b`,'i'),`<span class="blank" title="${w}">[…]</span>`),it.audio);
+    return `
+    <div class="card ${S.done[key]?'':''}">
+      <span class="tag">${it.lv} ${S.done[key]?'<span class="done-badge">✓ done</span>':''}</span>
+      <h3 style="font-family:var(--font);font-size:1.1rem;margin-bottom:12px;">${it.title}</h3>
+      <div class="btn-row mb-sm">
+        <button class="btn sky" data-play="${esc(it.audio)}" data-rate="0.88">▶ Play (normal)</button>
+        <button class="btn ghost" data-play="${esc(it.audio)}" data-rate="0.65">🐢 Play slowly</button>
+      </div>
+      <div class="passage">${blanked}</div>
+      <div class="flex mt-sm">
+        <input type="text" placeholder="Type the ${it.blanks.length} missing words, separated by commas…" data-dict-input>
+        <button class="btn amber sm" data-check-dict="${it.blanks.join('|')}">Check</button>
+      </div>
+      <div class="fb" data-dict-fb></div>
+      <div style="margin-top:16px;">
+        <div class="small mb-sm">Comprehension questions:</div>
+        ${it.q.map((q,qi)=>quizHTML(q,`${key}-${qi}`))}
+      </div>
+      <div class="btn-row mt-sm">
+        <button class="btn green" data-done="${key}" data-pts="10">✓ Mark complete (+10 pts)</button>
+      </div>
+    </div>`;
+  }).join("")}
+  `;
+}
+
+// ========== SPEAKING ==========
+function speakPanel(){
+  const items=SPEAK.filter(d=>d.lv===S.level);
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  return `
+  <div class="sh"><div><h2>🎤 Speaking Studio</h2><div class="sub">Listen to the model → repeat out loud → record to check your accuracy.</div></div>${lvHTML()}</div>
+  <div class="fb info show" style="margin-bottom:14px;">${SR?"🟢 Speech recognition available — click Record and speak clearly.":"ℹ️ No speech recognition in this browser. Listen and practice out loud — then mark done."}</div>
+  ${items.map((it,i)=>{
+    const key=`speak-${S.level}-${i}`;
+    return `
+    <div class="card">
+      <span class="tag teal">${it.lv} ${S.done[key]?'<span class="done-badge">✓ done</span>':''}</span>
+      <div style="font-family:var(--font);font-size:1.15rem;font-weight:700;margin-bottom:10px;">"${it.ph}"</div>
+      <div class="info-tip"><strong>Tip:</strong> ${it.tip}</div>
+      <div class="accent-tip"><strong>🇮🇳 Accent note:</strong> ${it.acc}</div>
+      <div class="btn-row">
+        <button class="btn teal" data-play="${esc(it.ph)}" data-rate="0.88">▶ Hear it</button>
+        <button class="btn ghost" data-play="${esc(it.ph)}" data-rate="0.62">🐢 Slowly</button>
+        <button class="btn rose" data-record="${esc(it.ph)}" data-key="${key}">🎤 Record</button>
+        <span class="mic-ring" id="micRing-${i}" title="Record">🎤</span>
+      </div>
+      <div class="fb" data-speak-fb="${i}"></div>
+      <div class="btn-row mt-sm">
+        <button class="btn green" data-done="${key}" data-pts="10">✓ Mark done (+10 pts)</button>
+      </div>
+    </div>`;
+  }).join("")}
+  `;
+}
+
+// ========== READING ==========
+function readPanel(){
+  const items=READ.filter(d=>d.lv===S.level);
+  return `
+  <div class="sh"><div><h2>📖 Reading Room</h2><div class="sub">Read the passage, hover words for meanings, answer questions.</div></div>${lvHTML()}</div>
+  ${items.map((it,i)=>{
+    const key=`read-${S.level}-${i}`;
+    let txt=it.text;
+    it.vocab.forEach(v=>{
+      txt=txt.replace(new RegExp(`\\b(${v.w}\\w*)\\b`,'i'),`<span style="border-bottom:1.5px dashed var(--teal);cursor:help;position:relative;" title="${v.d}">$1</span>`);
+    });
+    return `
+    <div class="card">
+      <span class="tag">${it.lv} ${S.done[key]?'<span class="done-badge">✓ done</span>':''}</span>
+      <div class="flex mb-sm">
+        <h3 style="font-family:var(--font);font-size:1.1rem;">${it.title}</h3>
+        <button class="btn ghost sm" data-play="${esc(it.text)}" data-rate="0.85">▶ Read aloud</button>
+      </div>
+      <div class="passage">${txt}</div>
+      <div class="small mb-sm" style="margin-top:-4px;margin-bottom:10px;">💡 Hover underlined words for definitions</div>
+      <div class="small mb-sm">Key vocabulary:</div>
+      <div class="flex mb-sm">${it.vocab.map(v=>`<span style="font-family:var(--mono);font-size:0.72rem;color:var(--teal);background:rgba(46,236,198,0.08);padding:3px 8px;border-radius:20px;cursor:help;" title="${v.d}">${v.w}</span>`).join("")}</div>
+      ${it.q.map((q,qi)=>quizHTML(q,`${key}-${qi}`))}
+      <div class="btn-row mt-sm">
+        <button class="btn green" data-done="${key}" data-pts="10">✓ Mark done (+10 pts)</button>
+      </div>
+    </div>`;
+  }).join("")}
+  `;
+}
+
+// ========== WRITING ==========
+function writePanel(){
+  const items=WRITE.filter(d=>d.lv===S.level);
+  return `
+  <div class="sh"><div><h2>✍️ Writing Workshop</h2><div class="sub">Write your answer, then compare with a model. Focus on clarity and natural tone.</div></div>${lvHTML()}</div>
+  ${items.map((it,i)=>{
+    const key=`write-${S.level}-${i}`;
+    return `
+    <div class="card">
+      <span class="tag rose">${it.lv} ${S.done[key]?'<span class="done-badge">✓ done</span>':''}</span>
+      <h3 style="font-family:var(--font);font-size:1.1rem;margin-bottom:8px;">${it.title}</h3>
+      <p style="color:var(--text2);font-size:0.9rem;margin-bottom:12px;">${it.prompt}</p>
+      <div class="info-tip"><strong>Checklist:</strong> ${it.checklist.join(" · ")}</div>
+      <textarea rows="6" placeholder="Write your answer here…" data-write-area style="margin-top:10px;"></textarea>
+      <div class="flex mt-sm">
+        <span class="small" data-word-count>0 words</span>
+        <span class="spacer"></span>
+        <button class="btn ghost sm" data-toggle="sample-${key}">Show model answer</button>
+        <button class="btn green" data-done="${key}" data-pts="10">✓ Done (+10 pts)</button>
+      </div>
+      <div class="fb neutral" id="sample-${key}" style="white-space:pre-line;display:none;">${esc2(it.sample)}</div>
+    </div>`;
+  }).join("")}
+  `;
+}
+
+// ========== VOCAB ==========
+function vocabPanel(){
+  const deckNames=Object.keys(VOCAB_DATA);
+  const deck=VOCAB_DATA[S.flashDeck];
+  const card=deck[S.flashIdx];
+  const known=deck.filter((c,i)=>S.vocabKnown[S.flashDeck+":"+i]).length;
+  // fill sentence for this deck word
+  const fill=FILL_SENTENCES.filter(f=>f.lv===S.level);
+  return `
+  <div class="sh"><div><h2>💬 Vocabulary Builder</h2><div class="sub">Tap to flip · ▶ to hear · Mark words you know</div></div></div>
+  <div class="cat-scroll">${deckNames.map(d=>`<button class="cat-chip ${d===S.flashDeck?"active":""}" data-deck="${d}">${d}</button>`).join("")}</div>
+  
+  <div class="flashcard-scene" id="flashScene">
+    <div class="flashcard-inner" id="flashInner">
+      <div class="fc-front">
+        <div class="fc-word">${card.w}</div>
+        <div class="fc-pos">${card.pos}</div>
+        <div class="fc-hint" style="margin-top:16px;color:var(--text3);font-size:0.75rem;">Tap to see meaning</div>
+      </div>
+      <div class="fc-back">
+        <div class="fc-meaning">${card.m}</div>
+        <div class="fc-example">"${card.ex}"</div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-bottom:4px;font-family:var(--mono);font-size:0.72rem;color:var(--text3);">${S.flashIdx+1} / ${deck.length} · <span style="color:var(--green);">${known} known</span></div>
+  <div class="btn-row" style="justify-content:center;margin-bottom:20px;">
+    <button class="btn ghost" data-flash="prev">← Prev</button>
+    <button class="btn teal" data-play="${esc(card.w+". "+card.m+". Example: "+card.ex)}">▶ Hear</button>
+    <button class="btn green" data-flash="know">✓ I know this (+5)</button>
+    <button class="btn ghost" data-flash="next">Next →</button>
+  </div>
+
+  <div class="sh" style="margin-top:8px;"><h2>Fill in the blank</h2><div class="sub">Tap the right word to complete each sentence.</div></div>
+  ${fill.slice(0,3).map((f,i)=>fillCard(f,`fill-v-${S.level}-${i}`)).join("")}
+  `;
+}
+
+function fillCard(f,key){
+  const done=S.done[key];
+  return `
+  <div class="card" id="fillcard-${key}">
+    <span class="tag teal">Fill in the blank ${done?'<span class="done-badge">✓</span>':''}</span>
+    <div style="font-size:1rem;line-height:2;margin:10px 0;">${f.sentence.replace('______',`<strong style="color:var(--amber);">______</strong>`)}</div>
+    <div class="flex">${f.options.map(o=>`<button class="btn ghost sm" data-fill-answer="${o}" data-fill-correct="${f.word}" data-fill-key="${key}">${o}</button>`).join("")}</div>
+    <div class="fb" data-fill-fb="${key}"></div>
+  </div>`;
+}
+
+// ========== GRAMMAR ==========
+function grammarPanel(){
+  const topic=GRAMMAR.find(t=>t.id===S.gramTopic)||GRAMMAR[0];
+  return `
+  <div class="sh"><h2>📐 Grammar Gym</h2><div class="sub">Short lessons built from real workplace sentences.</div></div>
+  <div class="gram-split">
+    <div>
+      ${GRAMMAR.map(t=>`<button class="gram-topic ${t.id===S.gramTopic?"active":""}" data-gram-topic="${t.id}">${t.title}<span class="sc">${t.short}</span></button>`).join("")}
+    </div>
+    <div>
+      <div class="card">
+        <span class="tag">${topic.title}</span>
+        <p style="line-height:1.7;margin-bottom:12px;">${topic.exp}</p>
+        <div class="info-tip">
+          <strong>Examples:</strong>
+          ${topic.examples.map(e=>`<div style="margin-top:6px;display:flex;align-items:center;gap:8px;"><button class="btn ghost sm" data-play="${esc(e.replace(/\(.*?\)/g,'').trim())}">▶</button><span style="font-size:0.88rem;">${e}</span></div>`).join("")}
+        </div>
+        <h3 style="font-family:var(--font);font-size:1rem;margin:16px 0 8px;">Quick quiz</h3>
+        ${topic.quiz.map((q,qi)=>quizHTML(q,`gram-${topic.id}-${qi}`))}
+        <div class="btn-row mt-sm">
+          <button class="btn amber" data-grade-gram="${topic.id}" data-gram-total="${topic.quiz.length}">Check answers</button>
+        </div>
+        <div class="fb" data-gram-fb></div>
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+// ========== GAMES ==========
+let matchState={pairs:[],selected:[],matched:[],wrong:null};
+let scrambleState={words:[],current:0,letters:[],answer:[],solved:false};
+let typeState={idx:0,pos:0,started:false,startTime:0,mistakes:0};
+
+function gamesPanel(){
+  const tab=S.gameTab||"match";
+  return `
+  <div class="sh"><h2>🎮 Games & Challenges</h2><div class="sub">Learn while having fun — earn bonus points for fast completion.</div></div>
+  <div class="chip-row">
+    <button class="chip ${tab==='match'?'active':''}" data-game-tab="match">🃏 Word Match</button>
+    <button class="chip ${tab==='scramble'?'active':''}" data-game-tab="scramble">🔀 Word Scramble</button>
+    <button class="chip ${tab==='type'?'active':''}" data-game-tab="type">⌨️ Typing Challenge</button>
+    <button class="chip ${tab==='truelie'?'active':''}" data-game-tab="truelie">🤔 Grammar Trap</button>
+    <button class="chip ${tab==='idioms'?'active':''}" data-game-tab="idioms">💡 Idiom Flip</button>
+  </div>
+  ${tab==='match'?matchGame():tab==='scramble'?scrambleGame():tab==='type'?typeGame():tab==='truelie'?trueLieGame():idiomGame()}
+  `;
+}
+
+function matchGame(){
+  const setData=MATCH_SETS[S.matchSetIdx||0];
+  const allPairs=setData.pairs;
+  const words=allPairs.map(p=>p.a);
+  const defs=allPairs.map(p=>p.b);
+  const shuffled=[...words,...defs].sort(()=>Math.random()-0.5);
+  if(!window._matchState||window._matchState.set!==S.matchSetIdx){
+    window._matchState={set:S.matchSetIdx||0,tiles:shuffled,selected:[],matched:[]};
+  }
+  const ms=window._matchState;
+  const allMatched=ms.matched.length===allPairs.length*2;
+  return `
+  <div class="card">
+    <span class="tag violet">Word Match — Set ${(S.matchSetIdx||0)+1}/${MATCH_SETS.length}</span>
+    <h3 style="font-family:var(--font);font-size:1rem;margin-bottom:14px;">${setData.title}</h3>
+    <div class="match-board" id="matchBoard">
+      ${ms.tiles.map((t,i)=>{
+        const isSel=ms.selected.includes(i);
+        const isMatch=ms.matched.includes(i);
+        return `<button class="match-tile ${isMatch?'matched':''} ${isSel?'selected':''}" data-match-idx="${i}" ${isMatch?'disabled':''}>${t}</button>`;
+      }).join("")}
+    </div>
+    ${allMatched?`<div class="fb good show" style="margin-top:14px;">🎉 All matched! Set ${(S.matchSetIdx||0)+1} complete!</div>`:''}
+    <div class="btn-row mt-sm">
+      ${allMatched?`<button class="btn violet" data-next-match="1">Next set →</button>`:''}
+      <button class="btn ghost sm" onclick="window._matchState=null;S.matchSetIdx=(S.matchSetIdx||0);render();">Reset</button>
+    </div>
+  </div>`;
+}
+
+function scrambleGame(){
+  const wordList=["schedule","feedback","proposal","deadline","stakeholder","escalate","negotiate","benchmark"];
+  if(!window._scramble){
+    const w=wordList[Math.floor(Math.random()*wordList.length)];
+    window._scramble={word:w,letters:[...w].sort(()=>Math.random()-0.5),answer:[],solved:false};
+  }
+  const sc=window._scramble;
+  return `
+  <div class="card">
+    <span class="tag teal">Word Scramble — workplace vocabulary</span>
+    <p style="color:var(--text2);font-size:0.85rem;margin-bottom:4px;">Tap letters to build the correct word:</p>
+    <div class="scramble-letters">
+      ${sc.letters.map((l,i)=>`<div class="scram-letter ${sc.answer.includes(i)?'picked':''}" data-scram-pick="${i}">${l}</div>`).join("")}
+    </div>
+    <div style="font-size:0.78rem;color:var(--text3);margin-bottom:6px;">Your answer:</div>
+    <div class="answer-slots">
+      ${Array(sc.word.length).fill(0).map((_,i)=>{
+        const letter=sc.answer[i]!=null?sc.letters[sc.answer[i]]:'';
+        return `<div class="answer-slot ${letter?'filled':''}" data-scram-clear="${i}">${letter}</div>`;
+      }).join("")}
+    </div>
+    ${sc.solved?`<div class="fb good show">✅ Correct! The word is <b>${sc.word}</b> — a key workplace term.</div>`:''}
+    <div class="btn-row mt-sm">
+      <button class="btn amber" id="checkScramble">Check</button>
+      <button class="btn ghost sm" onclick="window._scramble=null;render();">New word</button>
+    </div>
+  </div>`;
+}
+
+function typeGame(){
+  const items=TYPE_SENTENCES.filter(t=>t.lv===S.level);
+  if(!window._typeState||window._typeState.level!==S.level){
+    window._typeState={level:S.level,idx:0,typed:"",started:false,startTime:0,done:false,wpm:0};
+  }
+  const ts=window._typeState;
+  const sentence=items[ts.idx]||items[0];
+  const target=sentence.text;
+  const chars=target.split("").map((c,i)=>{
+    const typed=ts.typed[i];
+    let cls="type-char ";
+    if(typed==null) cls+=i===ts.typed.length?"current":"pending";
+    else cls+=typed===c?"correct":"wrong";
+    return `<span class="${cls}">${c}</span>`;
+  }).join("");
+  return `
+  <div class="card">
+    <span class="tag sky">Typing Challenge — accuracy & speed</span>
+    ${ts.done?`<div class="fb good show">🎯 Done! Speed: <b>${ts.wpm} WPM</b> · Try the next sentence.</div>`:''}
+    <div class="type-display">${chars}</div>
+    <textarea id="typeInput" placeholder="Start typing the sentence above…" rows="2" style="margin-top:10px;" ${ts.done?'disabled':''}>${ts.typed}</textarea>
+    <div class="btn-row mt-sm">
+      <span class="small">${ts.typed.length}/${target.length} chars · ${ts.wpm||0} WPM</span>
+      <span class="spacer"></span>
+      <button class="btn ghost sm" onclick="window._typeState=null;render();">Reset</button>
+      ${ts.done?`<button class="btn amber" onclick="window._typeState.idx=(window._typeState.idx+1)%${items.length};window._typeState.typed='';window._typeState.done=false;window._typeState.started=false;render();">Next sentence</button>`:''}
+    </div>
+  </div>`;
+}
+
+function trueLieGame(){
+  const sets=[
+    {
+      title:"Which sentence is grammatically correct?",
+      cards:[
+        {txt:"I have worked here since three years.",correct:false,why:"Use 'for' with durations, not 'since'. Say: 'for three years'"},
+        {txt:"She has been waiting since 9 AM.",correct:true,why:"Correct! 'Since' + specific time point."},
+        {txt:"We met the client since Monday.",correct:false,why:"'Since' needs present perfect: 'We have met the client since Monday' or 'We met the client on Monday'"},
+      ],
+    },
+    {
+      title:"Which is the most professional response?",
+      cards:[
+        {txt:"I'll revert back to you.",correct:false,why:"'Revert back' is redundant — 'revert' already means 'go back'. Also, 'revert' as 'reply' is Indian English — say 'I'll get back to you'."},
+        {txt:"Let me get back to you by EOD.",correct:true,why:"Clear, professional, and globally understood."},
+        {txt:"I'll come back to you when I know.",correct:false,why:"Not wrong, but vague. 'By EOD' or a specific time is much stronger."},
+      ],
+    },
+    {
+      title:"Spot the incorrect usage:",
+      cards:[
+        {txt:"Please do the needful.",correct:false,why:"Classic Indian English phrase — not used in global business. Say: 'Please take care of this' or 'Please proceed accordingly'."},
+        {txt:"Please proceed as discussed.",correct:true,why:"Natural and universally understood."},
+        {txt:"Let me know if you need anything further.",correct:true,why:"Polite, professional standard email closing."},
+      ],
+    },
+  ];
+  const set=sets[S.trueLieSet||0];
+  return `
+  <div class="card">
+    <span class="tag coral">Grammar Trap — spot the mistake</span>
+    <h3 style="font-family:var(--font);font-size:1rem;margin-bottom:14px;">${set.title}</h3>
+    <div class="tl-cards" id="tlCards">
+      ${set.cards.map((c,i)=>`
+        <div class="tl-card" id="tlcard-${i}" data-tl-idx="${i}" data-tl-correct="${c.correct}">
+          <div style="font-size:0.9rem;line-height:1.5;">"${c.txt}"</div>
+          <div class="fb" id="tl-fb-${i}" style="margin-top:8px;font-size:0.75rem;"></div>
+        </div>`).join("")}
+    </div>
+    <div class="btn-row mt-sm">
+      <button class="btn ghost sm" onclick="S.trueLieSet=((S.trueLieSet||0)+1)%${sets.length};render();">Next set</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:0;">
+    <span class="tag">How to play</span>
+    <p style="color:var(--text2);font-size:0.88rem;line-height:1.6;">Click each card to find out if it's correct ✅ or has an error ❌. Read the explanation to understand why.</p>
+  </div>`;
+}
+
+function idiomGame(){
+  const chunk=IDIOMS.slice(0,6);
+  return `
+  <div class="sh" style="margin-bottom:10px;"><h2>Idiom Flip Cards</h2><div class="sub">Tap to reveal meaning · ▶ to hear in a sentence</div></div>
+  <div class="two-col">
+    ${chunk.map((id,i)=>{
+      const flipped=S.idiomFlips[i];
+      return `
+      <div>
+        <div class="idiom-flip-scene" data-idiom-flip="${i}">
+          <div class="idiom-flip-inner ${flipped?'flipped':''}" id="idiom-${i}">
+            <div class="idiom-front">
+              <div style="font-family:var(--font);font-weight:700;font-size:1rem;">"${id.phrase}"</div>
+              <div style="font-size:0.72rem;color:var(--text3);margin-top:8px;">Tap to reveal</div>
+            </div>
+            <div class="idiom-back">
+              <div style="font-size:0.85rem;font-weight:600;color:var(--teal);">${id.meaning}</div>
+              <div style="font-size:0.78rem;color:var(--text2);margin-top:6px;font-style:italic;">"${id.ex}"</div>
+            </div>
+          </div>
+        </div>
+        <div class="flex" style="justify-content:center;gap:8px;margin-top:6px;margin-bottom:14px;">
+          <button class="btn ghost sm" data-play="${esc(id.ex)}">▶ Hear sentence</button>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>
+  <div class="card" style="margin-top:0;">
+    <div class="flex">
+      <span class="tag" style="margin:0;">More idioms</span>
+    </div>
+    <div style="margin-top:10px;">${IDIOMS.slice(6).map(id=>`<div style="margin-bottom:8px;padding:10px 12px;background:var(--ink3);border-radius:var(--rad-sm);display:flex;align-items:center;gap:10px;"><span style="font-family:var(--font);font-weight:700;min-width:160px;font-size:0.88rem;">${id.phrase}</span><span style="color:var(--text2);font-size:0.82rem;flex:1;">${id.meaning}</span><button class="btn ghost sm" data-play="${esc(id.ex)}">▶</button></div>`).join("")}</div>
+  </div>`;
+}
+
+// ========== INTERVIEW ==========
+function interviewPanel(){
+  const items=INTERVIEW.filter(d=>d.lv===S.level);
+  return `
+  <div class="sh"><div><h2>🧑‍💼 Interview Prep</h2><div class="sub">STAR method practice with model answers and audio.</div></div>${lvHTML()}</div>
+  ${items.map((it,i)=>{
+    const key=`iv-${S.level}-${i}`;
+    return `
+    <div class="card" style="border-color:rgba(167,139,255,0.2);">
+      <span class="tag violet">${it.lv} ${S.done[key]?'<span class="done-badge">✓ done</span>':''}</span>
+      <h3 style="font-family:var(--font);font-size:1.1rem;margin-bottom:10px;">❓ "${it.q}"</h3>
+      <div class="info-tip"><strong>Approach:</strong> ${it.guide}</div>
+      ${it.star?`
+      <div style="margin-top:12px;font-family:var(--mono);font-size:0.65rem;color:var(--violet);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">STAR Method</div>
+      <div class="two-col">
+        ${Object.entries(it.star).map(([k,v])=>`<div class="card" style="margin:0;padding:14px;background:rgba(167,139,255,0.05);border-color:rgba(167,139,255,0.15);"><div style="font-family:var(--mono);font-size:0.62rem;color:var(--violet);text-transform:uppercase;margin-bottom:4px;">${k}</div><div style="font-size:0.83rem;color:var(--text2);">${v}</div></div>`).join("")}
+      </div>`:'' }
+      <div style="margin-top:12px;font-size:0.8rem;color:var(--text2);">${it.tips.map(t=>`• ${t}`).join(" &nbsp;·&nbsp; ")}</div>
+      <div class="btn-row mt-sm">
+        <button class="btn ghost" data-toggle="iv-sample-${key}">Show model answer</button>
+        <button class="btn teal" data-play="${esc(it.sample)}">▶ Hear it</button>
+        <button class="btn green" data-done="${key}" data-pts="12">✓ Done (+12 pts)</button>
+      </div>
+      <div class="fb neutral" id="iv-sample-${key}" style="white-space:pre-line;display:none;font-family:var(--body);">${esc2(it.sample)}</div>
+      <textarea rows="3" placeholder="Write your own answer and compare…" data-write-area style="margin-top:12px;"></textarea>
+      <span class="small mt-sm" data-word-count>0 words</span>
+    </div>`;
+  }).join("")}
+  `;
+}
+
+// ========== PRONUNCIATION ==========
+function pronPanel(){
+  return `
+  <div class="sh"><h2>🗣️ Accent & Pronunciation</h2><div class="sub">Indian English coaching — awareness is the goal, not erasing your accent.</div></div>
+  
+  <div class="card" style="margin-bottom:14px;">
+    <span class="tag rose">Pronunciation guide</span>
+    <p style="color:var(--text2);font-size:0.85rem;margin-bottom:14px;">Click ▶ on any word to hear it. Both Indian English and global standard forms are fully valid — this is about awareness for international contexts.</p>
+    ${PRON.map(p=>`
+    <div class="pron-row">
+      <div class="pron-word">${p.word}</div>
+      <div class="pron-ipa">${p.india}</div>
+      <div style="font-family:var(--mono);font-size:0.72rem;color:var(--teal);min-width:90px;">${p.std}</div>
+      <div class="pron-note">${p.note}</div>
+      <button class="btn ghost sm" data-play="${esc(p.word)}" style="flex-shrink:0;">▶</button>
+    </div>`).join("")}
+  </div>
+
+  <div class="sh"><h2>Tongue twisters</h2><div class="sub">Great for warm-ups, articulation, and connected speech.</div></div>
+  ${TONGUE_TWISTERS.map((tt,i)=>`
+  <div class="tt-card">
+    <span class="tag" style="text-align:center;margin-bottom:6px;">Tongue Twister ${i+1}</span>
+    <div class="tt-phrase">"${tt.phrase}"</div>
+    <div class="tt-tip">${tt.tip}</div>
+    <div class="speed-btns">
+      <button class="btn ghost sm" data-play="${esc(tt.phrase)}" data-rate="0.6">🐢 Slow</button>
+      <button class="btn ghost sm" data-play="${esc(tt.phrase)}" data-rate="0.85">Normal</button>
+      <button class="btn amber sm" data-play="${esc(tt.phrase)}" data-rate="1.05">⚡ Fast</button>
+    </div>
+  </div>`).join("")}
+
+  <div class="sh"><h2>Practice sentences</h2><div class="sub">Hear full workplace sentences with tricky words.</div></div>
+  <div class="card">
+    ${[
+      "I need to schedule a comfortable meeting to discuss the specific development.",
+      "My colleague will present the analysis particularly clearly to the board.",
+      "This is necessarily going to take time — actually, about three weeks.",
+      "Could you excel at this task and send me the document by end of day?"
+    ].map(s=>`<div class="flex" style="margin-bottom:10px;"><button class="btn teal sm" data-play="${esc(s)}">▶</button><span style="font-size:0.9rem;flex:1;">${s}</span></div>`).join("")}
+  </div>
+  `;
+}
+
+// ========== ROLEPLAY ==========
+function roleplayPanel(){
+  const sc=SCENARIOS.find(s=>s.id===S.scenarioId)||SCENARIOS[0];
+  return `
+  <div class="sh"><h2>🎭 Workplace Roleplay</h2><div class="sub">7 real conversations — meetings, calls, negotiations, apologies and more.</div></div>
+  <div class="sit-grid">
+    ${SCENARIOS.map(s=>`
+    <div class="sit-tile ${s.id===S.scenarioId?'active':''}" data-scenario="${s.id}">
+      <div class="si">${s.emoji}</div>
+      <div style="font-family:var(--font);font-size:0.82rem;font-weight:700;margin-bottom:3px;">${s.title}</div>
+      <p>${s.lv}</p>
+    </div>`).join("")}
+  </div>
+  <div class="card" style="border-color:rgba(167,139,255,0.2);">
+    <span class="tag violet">${sc.lv} · ${sc.title}</span>
+    <div style="margin-bottom:16px;">${sc.lines.map(l=>`
+      <div class="chat-bubble ${l.who==='You'?'me':''}">
+        <div class="bubble-ava ${l.who==='You'?'me':'other'}">${l.who==='You'?'😊':'🧑'}</div>
+        <div class="bubble-txt ${l.who==='You'?'me':''}">
+          <div class="bubble-who">${l.who}</div>
+          ${l.txt}
+          <div style="margin-top:6px;">
+            <button class="btn ghost sm" data-play="${esc(l.txt)}" data-rate="0.85">▶</button>
+            <button class="btn ghost sm" data-play="${esc(l.txt)}" data-rate="0.62">🐢</button>
+          </div>
+        </div>
+      </div>`).join("")}
+    </div>
+    <div class="info-tip"><strong>💡 Practice tip:</strong> Listen to each line, then say it out loud trying to match the rhythm and intonation. The "You" lines are your target.</div>
+    <div class="btn-row mt-sm">
+      <button class="btn green" data-done="sc-${sc.id}" data-pts="15">✓ Complete scenario (+15 pts)</button>
+    </div>
+  </div>
+  `;
+}
+
+/* ============================================================
+   SHARED HELPERS
+============================================================ */
+function quizHTML(q, uid){
+  return `<div class="card" style="padding:14px;margin-bottom:10px;" data-quiz="${uid}">
+    <div style="font-size:0.9rem;margin-bottom:8px;">${q.q}</div>
+    <div class="quiz-opts">
+      ${q.opts.map((o,i)=>`<button class="quiz-opt" data-opt="${i}" data-correct="${q.a}" data-quid="${uid}"><span class="opt-letter">${String.fromCharCode(65+i)}</span>${o}</button>`).join("")}
+    </div>
+  </div>`;
+}
+function esc(s){ return String(s).replace(/"/g,'&quot;'); }
+function esc2(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ============================================================
+   EVENT BINDING
+============================================================ */
+function bind(){
+  // Navigation
+  document.querySelectorAll(".bnav-btn[data-tab]").forEach(b=>b.addEventListener("click",()=>goTab(b.dataset.tab)));
+  document.querySelectorAll("[data-goto]").forEach(b=>b.addEventListener("click",()=>goTab(b.dataset.goto)));
+
+  // Level
+  document.querySelectorAll("[data-lv]").forEach(b=>b.addEventListener("click",()=>{ S.level=b.dataset.lv; render(); }));
+
+  // Voice toggle
+  document.getElementById("voiceChip")?.addEventListener("click",()=>{ voiceGender=voiceGender==="girl"?"guy":"girl"; render(); });
+
+  // Play buttons
+  document.querySelectorAll("[data-play]").forEach(b=>b.addEventListener("click",()=>speak(b.dataset.play,parseFloat(b.dataset.rate||0.88))));
+
+  // Quiz opts
+  document.querySelectorAll(".quiz-opt").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const parent=btn.closest(".quiz-opts");
+      if(parent.dataset.answered) return;
+      parent.dataset.answered="1";
+      const correct=parseInt(btn.dataset.correct);
+      parent.querySelectorAll(".quiz-opt").forEach((o,i)=>{
+        o.classList.add(i===correct?"correct":"wrong");
+        o.disabled=true;
+      });
+    });
+  });
+
+  // Done buttons
+  document.querySelectorAll("[data-done]").forEach(b=>{
+    b.addEventListener("click",()=>{ markDone(b.dataset.done,parseInt(b.dataset.pts||10)); render(); });
+  });
+
+  // Toggle show/hide
+  document.querySelectorAll("[data-toggle]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const el=document.getElementById(b.dataset.toggle);
+      if(el){ el.style.display=el.style.display==="none"?"block":"none"; el.classList.toggle("show"); }
+    });
+  });
+
+  // Dictation check
+  document.querySelectorAll("[data-check-dict]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const card=b.closest(".card");
+      const input=card.querySelector("[data-dict-input]");
+      const answers=b.dataset.checkDict.split("|").map(a=>a.toLowerCase());
+      const typed=input.value.toLowerCase().split(",").map(s=>s.trim()).filter(Boolean);
+      let correct=0;
+      answers.forEach(a=>{ if(typed.includes(a)) correct++; });
+      const fb=card.querySelector("[data-dict-fb]");
+      fb.className=`fb show ${correct===answers.length?"good":correct>0?"neutral":"bad"}`;
+      fb.innerHTML=`You got <b>${correct}/${answers.length}</b> correct. Answers: <em>${answers.join(", ")}</em>`;
+    });
+  });
+
+  // Word count for textareas
+  document.querySelectorAll("[data-write-area]").forEach(ta=>{
+    ta.addEventListener("input",()=>{
+      const wc=ta.parentElement.querySelector("[data-word-count]")||ta.nextElementSibling;
+      if(wc) wc.textContent=ta.value.trim().split(/\s+/).filter(Boolean).length+" words";
+    });
+  });
+
+  // Flashcard
+  document.querySelectorAll("[data-deck]").forEach(b=>b.addEventListener("click",()=>{ S.flashDeck=b.dataset.deck; S.flashIdx=0; render(); }));
+  document.getElementById("flashScene")?.addEventListener("click",()=>{ document.getElementById("flashInner")?.classList.toggle("flipped"); });
+  document.querySelector("[data-flash='next']")?.addEventListener("click",()=>{ S.flashIdx=(S.flashIdx+1)%VOCAB_DATA[S.flashDeck].length; render(); });
+  document.querySelector("[data-flash='prev']")?.addEventListener("click",()=>{ S.flashIdx=(S.flashIdx-1+VOCAB_DATA[S.flashDeck].length)%VOCAB_DATA[S.flashDeck].length; render(); });
+  document.querySelector("[data-flash='know']")?.addEventListener("click",()=>{
+    const k=S.flashDeck+":"+S.flashIdx;
+    if(!S.vocabKnown[k]){ S.vocabKnown[k]=true; addPts(5); save(); }
+    S.flashIdx=(S.flashIdx+1)%VOCAB_DATA[S.flashDeck].length; render();
+  });
+
+  // Grammar topic
+  document.querySelectorAll("[data-gram-topic]").forEach(b=>b.addEventListener("click",()=>{ S.gramTopic=b.dataset.gramTopic; render(); }));
+
+  // Grammar grade
+  document.querySelectorAll("[data-grade-gram]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const total=parseInt(b.dataset.gramTotal);
+      let correct=0;
+      document.querySelectorAll(`[data-quiz^="gram-"]`).forEach(group=>{
+        if(group.querySelector(".quiz-opts")?.dataset.answered){
+          if(group.querySelector(".quiz-opt.correct")) correct++;
+        }
+      });
+      const fb=document.querySelector("[data-gram-fb]");
+      if(fb){
+        fb.className=`fb show ${correct===total?"good":correct>0?"neutral":"bad"}`;
+        fb.innerHTML=`Score: <b>${correct}/${total}</b> ${correct===total?"— excellent! 🎉":"— review the examples and try again."}`;
+      }
+      if(correct>0) addPts(correct*3);
+    });
+  });
+
+  // Game tabs
+  document.querySelectorAll("[data-game-tab]").forEach(b=>b.addEventListener("click",()=>{ S.gameTab=b.dataset.gameTab; render(); }));
+
+  // Word match
+  document.querySelectorAll(".match-tile[data-match-idx]").forEach(tile=>{
+    tile.addEventListener("click",()=>{
+      const ms=window._matchState;
+      if(!ms||tile.classList.contains("matched")) return;
+      const idx=parseInt(tile.dataset.matchIdx);
+      if(ms.selected.includes(idx)){ ms.selected=[]; document.querySelectorAll(".match-tile").forEach(t=>t.classList.remove("selected")); return; }
+      ms.selected.push(idx);
+      tile.classList.add("selected");
+      if(ms.selected.length===2){
+        const [a,b]=ms.selected;
+        const ta=ms.tiles[a], tb=ms.tiles[b];
+        const set=MATCH_SETS[ms.set||0];
+        const isMatch=set.pairs.some(p=>(p.a===ta&&p.b===tb)||(p.b===ta&&p.a===tb));
+        if(isMatch){
+          ms.matched.push(a,b);
+          document.querySelectorAll(".match-tile").forEach(t=>{ if([a,b].includes(parseInt(t.dataset.matchIdx))) t.classList.add("matched"); });
+          addPts(5);
+        } else {
+          document.querySelectorAll(".match-tile").forEach(t=>{ if(ms.selected.includes(parseInt(t.dataset.matchIdx))) t.classList.add("wrong-flash"); });
+          setTimeout(()=>{ document.querySelectorAll(".match-tile").forEach(t=>t.classList.remove("wrong-flash","selected")); },400);
+        }
+        ms.selected=[];
+        if(ms.matched.length===MATCH_SETS[ms.set||0].pairs.length*2){ addPts(10); setTimeout(()=>render(),300); }
+      }
+    });
+  });
+  document.querySelector("[data-next-match]")?.addEventListener("click",()=>{ S.matchSetIdx=((S.matchSetIdx||0)+1)%MATCH_SETS.length; window._matchState=null; render(); });
+
+  // Scramble
+  document.querySelectorAll("[data-scram-pick]").forEach(l=>{
+    l.addEventListener("click",()=>{
+      const sc=window._scramble;
+      if(!sc||sc.solved) return;
+      const i=parseInt(l.dataset.scramPick);
+      if(sc.answer.includes(i)) return;
+      sc.answer.push(i);
+      render();
+    });
+  });
+  document.querySelectorAll("[data-scram-clear]").forEach(s=>{
+    s.addEventListener("click",()=>{
+      const sc=window._scramble;
+      if(!sc||sc.solved) return;
+      const i=parseInt(s.dataset.scramClear);
+      if(sc.answer[i]!=null){ sc.answer.splice(i,1); render(); }
+    });
+  });
+  document.getElementById("checkScramble")?.addEventListener("click",()=>{
+    const sc=window._scramble;
+    if(!sc) return;
+    const typed=sc.answer.map(i=>sc.letters[i]).join("");
+    if(typed===sc.word){ sc.solved=true; addPts(15); render(); }
+    else{
+      const el=document.getElementById("checkScramble");
+      el.textContent="❌ Try again!"; el.className="btn coral sm";
+      setTimeout(()=>{ el.textContent="Check"; el.className="btn amber"; },800);
+    }
+  });
+
+  // Typing
+  document.getElementById("typeInput")?.addEventListener("input",(e)=>{
+    const ts=window._typeState;
+    if(!ts) return;
+    const items=TYPE_SENTENCES.filter(t=>t.lv===S.level);
+    const target=(items[ts.idx]||items[0]).text;
+    if(!ts.started){ ts.started=true; ts.startTime=Date.now(); }
+    ts.typed=e.target.value.slice(0,target.length);
+    if(ts.typed===target){
+      ts.done=true;
+      const elapsed=(Date.now()-ts.startTime)/1000/60;
+      ts.wpm=Math.round((target.split(" ").length)/elapsed);
+      addPts(20);
+    }
+    render();
+    setTimeout(()=>{ const inp=document.getElementById("typeInput"); if(inp){ inp.value=ts.typed; inp.focus(); inp.setSelectionRange(ts.typed.length,ts.typed.length); }},10);
+  });
+
+  // True/Lie
+  document.querySelectorAll("[data-tl-idx]").forEach(card=>{
+    card.addEventListener("click",()=>{
+      const i=parseInt(card.dataset.tlIdx);
+      const correct=card.dataset.tlCorrect==="true";
+      const sets=[
+        {cards:[
+          {txt:"",correct:false,why:"Use 'for' with durations, not 'since'. Say: 'for three years'"},
+          {txt:"",correct:true,why:"Correct! 'Since' + specific time point."},
+          {txt:"",correct:false,why:"'Since' needs present perfect here."},
+        ]},
+        {cards:[
+          {txt:"",correct:false,why:"'Revert back' is redundant. Use 'get back to you'."},
+          {txt:"",correct:true,why:"Clear, professional, globally understood."},
+          {txt:"",correct:false,why:"Vague — give a specific time instead."},
+        ]},
+        {cards:[
+          {txt:"",correct:false,why:"'Do the needful' is Indian English — not used globally. Say 'Please take care of this'."},
+          {txt:"",correct:true,why:"Natural and universally understood."},
+          {txt:"",correct:true,why:"Polite, professional standard closing."},
+        ]},
+      ];
+      const why=(sets[S.trueLieSet||0].cards[i]||{}).why||"";
+      card.classList.add(correct?"truth-revealed":"lie-revealed");
+      const fb=document.getElementById(`tl-fb-${i}`);
+      if(fb){ fb.style.display="block"; fb.innerHTML=`${correct?"✅":"❌"} ${why}`; fb.style.color=correct?"var(--green)":"var(--coral)"; }
+    });
+  });
+
+  // Idiom flip
+  document.querySelectorAll("[data-idiom-flip]").forEach(el=>{
+    el.addEventListener("click",()=>{ const i=el.dataset.idiomFlip; S.idiomFlips[i]=!S.idiomFlips[i]; render(); });
+  });
+
+  // Scenario
+  document.querySelectorAll("[data-scenario]").forEach(b=>b.addEventListener("click",()=>{ S.scenarioId=b.dataset.scenario; render(); }));
+
+  // Fill answer
+  document.querySelectorAll("[data-fill-answer]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const correct=b.dataset.fillCorrect;
+      const chosen=b.dataset.fillAnswer;
+      const key=b.dataset.fillKey;
+      const fb=document.querySelector(`[data-fill-fb="${key}"]`);
+      if(chosen===correct){
+        fb.className="fb good show"; fb.textContent=`✅ Correct! "${correct}" is the right answer.`;
+        markDone(key,8);
+        b.closest(".card").querySelectorAll("[data-fill-answer]").forEach(btn=>btn.disabled=true);
+      } else {
+        fb.className="fb bad show"; fb.textContent=`❌ Not quite. Try again!`;
+        b.style.opacity="0.4"; b.disabled=true;
+      }
+    });
+  });
+
+  // Record
+  document.querySelectorAll("[data-record]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const target=btn.dataset.record;
+      const key=btn.dataset.key;
+      const card=btn.closest(".card");
+      const fb=card.querySelector(`[data-speak-fb]`);
+      const ringId=btn.dataset.ringId||("micRing-"+Array.from(document.querySelectorAll("[data-record]")).indexOf(btn));
+      const ring=document.getElementById(ringId)||card.querySelector(".mic-ring");
+      startRecord(target,key,fb,ring);
+    });
+  });
+}
+
+function startRecord(target,key,fb,ring){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ if(fb){fb.className="fb info show";fb.textContent="Speech recognition not available. Say the phrase aloud, listen carefully, then mark done.";} return; }
+  try{
+    const r=new SR();
+    r.lang="en-IN"; r.interimResults=false; r.maxAlternatives=1;
+    if(ring) ring.classList.add("listening");
+    r.onresult=e=>{
+      const said=e.results[0][0].transcript;
+      const score=matchScore(target,said);
+      if(fb){
+        fb.className=`fb show ${score>=70?"good":score>=40?"neutral":"bad"}`;
+        fb.innerHTML=`You said: "<em>${esc2(said)}</em>" · Match: <b>${score}%</b> ${score>=70?"— great! 🎉":score>=40?"— good, try once more.":"— listen again and focus on word stress."}`;
+      }
+      if(score>=60) markDone(key,10);
+      if(ring) ring.classList.remove("listening");
+    };
+    r.onerror=()=>{ if(ring) ring.classList.remove("listening"); };
+    r.onend=()=>{ if(ring) ring.classList.remove("listening"); };
+    r.start();
+  }catch(e){ if(fb){fb.className="fb bad show";fb.textContent="Microphone access denied. Allow it in your browser settings.";} }
+}
+function matchScore(a,b){
+  const n=s=>s.toLowerCase().replace(/[^a-z0-9 ]/g," ").split(/\s+/).filter(Boolean);
+  const at=n(a),bt=n(b); let m=0; const bc=[...bt];
+  at.forEach(w=>{ const i=bc.indexOf(w); if(i>-1){m++;bc.splice(i,1);} });
+  return at.length?Math.round(m/at.length*100):0;
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+loadState();
+</script>
+</body>
+</html>
