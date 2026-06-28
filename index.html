@@ -531,6 +531,142 @@ function lvHTML(){
 }
 
 /* ============================================================
+   GENERATOR ENGINE — unlimited, ever-fresh activities
+   Pure client-side, no network/API needed. Combines word banks +
+   sentence templates into new combinations every time, seeded by
+   day so the set rotates automatically, plus an instant "New set"
+   shuffle for on-demand variety.
+============================================================ */
+
+// Seeded RNG so "today's set" is stable across reloads but different each day
+function seededRng(seed){
+  let s=seed%2147483647; if(s<=0) s+=2147483646;
+  return function(){ s=(s*16807)%2147483647; return (s-1)/2147483646; };
+}
+function dayCode(){ return Number(new Date().toISOString().slice(0,10).replace(/-/g,"")); }
+function strSeed(str){ let h=0; for(let i=0;i<str.length;i++){ h=((h<<5)-h+str.charCodeAt(i))|0; } return Math.abs(h)||1; }
+// rng scoped to a "bucket" (module+level) + day, OR a manual shuffle nonce for instant variety
+function bucketRng(bucket){
+  const nonce=S.shuffleNonce&&S.shuffleNonce[bucket]||0;
+  return seededRng(strSeed(bucket+":"+dayCode()+":"+nonce));
+}
+function pick(rng,arr){ return arr[Math.floor(rng()*arr.length)]; }
+function pickN(rng,arr,n){
+  const pool=[...arr]; const out=[];
+  n=Math.min(n,pool.length);
+  for(let i=0;i<n;i++){ const idx=Math.floor(rng()*pool.length); out.push(pool.splice(idx,1)[0]); }
+  return out;
+}
+function shuffled(rng,arr){ return pickN(rng,arr,arr.length); }
+function reshuffle(bucket){
+  S.shuffleNonce=S.shuffleNonce||{};
+  S.shuffleNonce[bucket]=(S.shuffleNonce[bucket]||0)+1;
+  save(); render();
+}
+function refreshBtn(bucket,label="🎲 New set"){
+  return `<button class="btn ghost sm" onclick="reshuffle('${bucket}')" title="Generate a fresh set instantly — never the same twice">${label}</button>`;
+}
+function contentKey(prefix,text){ return `${prefix}-${strSeed(String(text)).toString(36)}`; }
+
+/* ---------- WORD BANKS used across generators ---------- */
+const WB={
+  names:["Priya","Rohan","Ananya","Vikram","Kavya","Arjun","Meera","Suresh","Divya","Nikhil","Pooja","Rahul","Shreya","Anand","Ritu","Sanjay","Neha","Karan","Tanya","Vivek"],
+  depts:["Sales","Marketing","Finance","Operations","HR","Product","Engineering","Customer Success","Legal","Procurement"],
+  deliverables:["the client report","the budget proposal","the onboarding deck","the project timeline","the audit summary","the campaign brief","the vendor contract","the quarterly review","the test plan","the design mockups","the pricing sheet","the training module"],
+  timeframes:["by end of day","by Friday","within two days","before the client call","by next Monday","before the sprint ends","within the hour","by the end of the week"],
+  meetingTypes:["a stand-up","a client call","a planning session","a one-on-one","a retrospective","a board review","a kickoff meeting","a status update"],
+  problems:["a vendor delay","a missing approval","a scope change","a staffing gap","a budget overrun","a tooling outage","a miscommunication with the client","a delayed shipment"],
+  emotions_soft:["I completely understand","I hear you on this","That's a fair concern","I appreciate you flagging this"],
+  business_verbs:["finalise","review","escalate","align on","circle back on","prioritise","validate","streamline","document","delegate"],
+  outcomes:["improved efficiency by 18%","cut turnaround time in half","reduced errors significantly","increased client satisfaction","saved roughly 10 hours a week","prevented a major delay"],
+};
+
+/* ---------- SENTENCE TEMPLATE GENERATORS ---------- */
+// Speaking phrases — unlimited via slot-filling
+const SPEAK_TEMPLATES={
+  Beginner:[
+    n=>`Good morning! Could you help me find ${pick(n,["the meeting room","the HR desk","the cafeteria","conference room "+pick(n,["A","B","C"])])}?`,
+    n=>`I will send you ${pick(n,WB.deliverables)} ${pick(n,WB.timeframes)}.`,
+    n=>`Nice to meet you. I'm from the ${pick(n,WB.depts)} team.`,
+    n=>`Sorry, could you repeat that more slowly please?`,
+    n=>`Could you tell me what time ${pick(n,WB.meetingTypes)} starts today?`,
+    n=>`Thank you for waiting — I'll be right with you.`,
+    n=>`Is it okay if I join ${pick(n,WB.meetingTypes)} five minutes late?`,
+    n=>`I just wanted to check in about ${pick(n,WB.deliverables)}.`,
+  ],
+  Intermediate:[
+    n=>`I see your point, but I have a slightly different take on ${pick(n,WB.deliverables)}.`,
+    n=>`Could we schedule a quick call to align on ${pick(n,WB.deliverables)}?`,
+    n=>`I'm afraid I won't be able to make ${pick(n,WB.meetingTypes)} this week.`,
+    n=>`We're currently dealing with ${pick(n,WB.problems)}, so the timeline may shift slightly.`,
+    n=>`Could you ${pick(n,WB.business_verbs)} ${pick(n,WB.deliverables)} ${pick(n,WB.timeframes)}?`,
+    n=>`${pick(n,WB.emotions_soft)} — let's find a way forward together.`,
+    n=>`I'd like to walk you through where things stand on ${pick(n,WB.deliverables)}.`,
+  ],
+  Advanced:[
+    n=>`With respect, I'd push back on the assumption behind ${pick(n,WB.deliverables)}.`,
+    n=>`Let me level with you — the timeline for ${pick(n,WB.deliverables)} isn't realistic as it stands.`,
+    n=>`I'd like to circle back once we have the data to support ${pick(n,WB.deliverables)}.`,
+    n=>`Given ${pick(n,WB.problems)}, I think we need to revisit our approach entirely.`,
+    n=>`We've ${pick(n,WB.outcomes)} this quarter, and I'd like to build on that momentum.`,
+    n=>`I want to be transparent — ${pick(n,WB.problems)} is going to affect our delivery date.`,
+  ],
+};
+const SPEAK_TIPS=["Keep your voice up at the end if it's a question.","Stress the most important word in the sentence, not every word equally.","Pause briefly before the key point — it adds weight.","Smile slightly while speaking; it softens your tone naturally.","Slow down on numbers and names so they land clearly.","Drop your pitch slightly at the end of a statement to sound confident."];
+const SPEAK_ACCENT_NOTES=["Connected speech: nearby words often blend together — don't pronounce each one separately.","Watch word stress — many Indian English speakers stress the wrong syllable in longer words.","Reduce filler words like 'actually' and 'basically' in formal contexts.","Final consonants should be light, not dropped entirely.","'Th' sounds should use the tongue between the teeth, not a hard 'd' or 't'.","Avoid translating Indian-English-only phrases like 'revert' or 'do the needful' for global audiences."];
+
+function genSpeakSet(level,count=6){
+  const rng=bucketRng("speak-"+level);
+  const templates=shuffled(rng,SPEAK_TEMPLATES[level]);
+  return Array.from({length:count},(_,i)=>{
+    const tFn=templates[i%templates.length];
+    return {lv:level,ph:tFn(rng),tip:pick(rng,SPEAK_TIPS),acc:pick(rng,SPEAK_ACCENT_NOTES)};
+  });
+}
+
+// Fill-in-the-blank — unlimited via verb/phrase bank slotting
+const FILL_BANK={
+  Beginner:[
+    {sentence:"Please ______ the report by end of day.",word:"send",options:["send","sent","sending"]},
+    {sentence:"I am calling ______ the account manager.",word:"for",options:["for","about","from"]},
+    {sentence:"Could you please ______ that again?",word:"repeat",options:["repeat","repeated","repeating"]},
+    {sentence:"She ______ to the meeting room now.",word:"is heading",options:["is heading","heads","headed"]},
+    {sentence:"We ______ the new joiner on Monday.",word:"will welcome",options:["will welcome","welcomed","welcoming"]},
+    {sentence:"Can you ______ me the file?",word:"send",options:["send","sending","sent"]},
+  ],
+  Intermediate:[
+    {sentence:"I'll ______ on this and get back to you by Friday.",word:"follow up",options:["follow up","pick up","catch up"]},
+    {sentence:"We need to ______ the launch by two weeks due to testing.",word:"push back",options:["push back","pull forward","move up"]},
+    {sentence:"Could you ______ the legal team on this email?",word:"loop in",options:["loop in","bring in","let in"]},
+    {sentence:"Let's ______ before making a final decision.",word:"touch base",options:["touch base","touch down","touch up"]},
+    {sentence:"I want to ______ a potential risk in this plan.",word:"flag",options:["flag","mark","note"]},
+    {sentence:"This issue needs to be ______ to senior management.",word:"escalated",options:["escalated","elevated","raised up"]},
+  ],
+  Advanced:[
+    {sentence:"Our strategy has ______ our cost base significantly.",word:"optimised",options:["optimised","affected","restructured"]},
+    {sentence:"We should ______ before making any assumptions about the data.",word:"validate",options:["validate","check","verify"]},
+    {sentence:"The board wants us to ______ our market position before Q4.",word:"consolidate",options:["consolidate","combine","merge"]},
+    {sentence:"With respect, I'd like to ______ that assumption.",word:"challenge",options:["challenge","fight","attack"]},
+    {sentence:"We need to ______ the risks before committing to this timeline.",word:"quantify",options:["quantify","count","number"]},
+  ],
+};
+function genFillSet(level,count=4){
+  const rng=bucketRng("fill-"+level);
+  return pickN(rng,FILL_BANK[level],Math.min(count,FILL_BANK[level].length));
+}
+
+// Typing challenge sentences — unlimited via template slotting
+const TYPE_TEMPLATES={
+  Beginner:[n=>`Please send me ${pick(n,WB.deliverables)} when you are ready.`,n=>`The meeting is scheduled for Monday at ten AM.`,n=>`I will be in the office ${pick(n,WB.timeframes)}.`],
+  Intermediate:[n=>`I appreciate your feedback and will incorporate it into the final version.`,n=>`Could you please loop in the design team on this thread?`,n=>`We are currently dealing with ${pick(n,WB.problems)}.`],
+  Advanced:[n=>`Our quarterly results reflect the strategic investments we have made in operational efficiency.`,n=>`With respect, I would push back on that assumption pending further data.`,n=>`Given the current constraints, I'd recommend we revisit the rollout plan together.`],
+};
+function genTypeSet(level,count=5){
+  const rng=bucketRng("type-"+level);
+  return Array.from({length:count},()=>({lv:level,text:pick(rng,TYPE_TEMPLATES[level])(rng)}));
+}
+
+/* ============================================================
    DATA
 ============================================================ */
 const LISTEN=[
@@ -541,6 +677,14 @@ const LISTEN=[
   {lv:"Intermediate",title:"Performance review",audio:"Your targets for this quarter were met in three out of four areas. Your client satisfaction scores improved significantly, which is fantastic. However, we would like to see stronger ownership of documentation going forward. I will share detailed written feedback by Friday.",blanks:["targets","satisfaction","documentation","feedback"],q:[{q:"How many areas were targets met in?",opts:["Two","Three","Four"],a:1},{q:"What needs improvement?",opts:["Client communication","Documentation ownership","Sales targets"],a:1}]},
   {lv:"Advanced",title:"Board strategy briefing",audio:"Despite headwinds in the first half, our adjusted EBITDA margins expanded by forty basis points, driven primarily by operational efficiency gains and a favorable geographic mix. We expect this momentum to continue if macro conditions stabilise, though we remain cautious on the demand outlook for the next two quarters.",blanks:["EBITDA","operational","geographic","cautious"],q:[{q:"What improved margins?",opts:["New products","Operational efficiency","Higher prices"],a:1},{q:"What is the outlook for next two quarters?",opts:["Very optimistic","Cautious","Very negative"],a:1}]},
   {lv:"Advanced",title:"Crisis communication",audio:"I want to address the situation head on. The data breach affected approximately twelve thousand customer accounts. We have already notified all affected users, engaged a third-party security firm, and implemented additional authentication protocols. Our top priority right now is restoring customer trust.",blanks:["breach","notified","authentication","trust"],q:[{q:"How many accounts were affected?",opts:["Ten thousand","Twelve thousand","Twenty thousand"],a:1},{q:"What is the top priority?",opts:["Fixing the system","Restoring customer trust","Informing regulators"],a:1}]},
+  {lv:"Beginner",title:"Reminder about badges",audio:"A quick reminder to all employees: please wear your ID badge visibly at all times inside the building. If you have lost your badge, report it to security immediately so a replacement can be issued.",blanks:["badge","building","security","replacement"],q:[{q:"What should you do if you lose your badge?",opts:["Wait until tomorrow","Report it to security","Borrow a friend's badge"],a:1},{q:"Where should the badge be worn?",opts:["In your bag","Visibly at all times","Only in meetings"],a:1}]},
+  {lv:"Beginner",title:"Booking the shuttle",audio:"The office shuttle leaves from the main gate every hour starting at eight AM. Please arrive five minutes early. The last shuttle in the evening departs at seven PM sharp.",blanks:["shuttle","gate","early","evening"],q:[{q:"When does the first shuttle leave?",opts:["Seven AM","Eight AM","Nine AM"],a:1},{q:"What time is the last shuttle?",opts:["Six PM","Seven PM","Eight PM"],a:1}]},
+  {lv:"Beginner",title:"A short team announcement",audio:"Just a heads up, the team lunch has been moved from Thursday to Friday this week because of the client visit. Same time, same place. Please let me know if you can't make it.",blanks:["lunch","Friday","client","place"],q:[{q:"Why was the lunch moved?",opts:["Holiday","Client visit","Bad weather"],a:1},{q:"To which day was it moved?",opts:["Wednesday","Thursday","Friday"],a:2}]},
+  {lv:"Intermediate",title:"Onboarding call",audio:"Welcome aboard. Over the next two weeks you'll shadow a senior team member, complete three online training modules, and have a check-in with your manager every Friday. Don't hesitate to ask questions — everyone here remembers being new once.",blanks:["shadow","modules","check-in","questions"],q:[{q:"How often is the manager check-in?",opts:["Daily","Every Friday","Monthly"],a:1},{q:"What will the new hire do in week one?",opts:["Lead a project","Shadow a senior team member","Travel to a client site"],a:1}]},
+  {lv:"Intermediate",title:"Budget discussion",audio:"We're currently running about eight percent over budget on the marketing campaign, mainly due to higher ad costs than forecasted. I'd like to propose reallocating funds from the print budget, which has underperformed, to cover the gap.",blanks:["budget","forecasted","reallocating","print"],q:[{q:"Why is the campaign over budget?",opts:["Lower sales","Higher ad costs","Staff costs"],a:1},{q:"What is proposed to cover the gap?",opts:["Cutting headcount","Reallocating funds from print","Asking for more budget"],a:1}]},
+  {lv:"Intermediate",title:"Customer escalation summary",audio:"The customer called in frustrated about a billing error that's happened twice now. I've issued a full refund and flagged the account for manual review before the next invoice goes out. I'll personally follow up with them tomorrow.",blanks:["billing","refund","manual","follow up"],q:[{q:"What did the agent issue?",opts:["A discount","A full refund","A warning"],a:1},{q:"What was the account flagged for?",opts:["Closure","Manual review","Upgrade"],a:1}]},
+  {lv:"Advanced",title:"Market expansion briefing",audio:"Our analysis suggests that entering the Southeast Asian market presents a compelling opportunity, with projected revenue growth of around twenty-two percent annually over the next three years. However, regulatory complexity in two of the four target countries means we should phase the rollout rather than launching simultaneously.",blanks:["Southeast","projected","regulatory","phase"],q:[{q:"What is the projected annual growth?",opts:["Twelve percent","Twenty-two percent","Thirty percent"],a:1},{q:"Why is a phased rollout recommended?",opts:["Budget limits","Regulatory complexity","Staff shortage"],a:1}]},
+  {lv:"Advanced",title:"Post-mortem on a failed launch",audio:"In hindsight, we underestimated the integration testing required with our partner's systems, and that single gap cascaded into a two-week delay and a missed marketing window. Going forward, we're instituting a mandatory integration checkpoint at the midpoint of every major release.",blanks:["integration","cascaded","marketing","checkpoint"],q:[{q:"What caused the cascading delay?",opts:["Marketing budget cuts","Underestimated integration testing","Staff turnover"],a:1},{q:"What change is being made going forward?",opts:["Smaller releases","A mandatory integration checkpoint","Hiring more testers"],a:1}]},
 ];
 
 const SPEAK=[
@@ -563,6 +707,14 @@ const READ=[
   {lv:"Intermediate",title:"Leading with questions",text:"The most effective managers rarely give orders. Instead, they ask questions that lead their team to discover answers themselves. This approach builds ownership, encourages critical thinking, and often results in more creative solutions than top-down directives.",vocab:[{w:"ownership",d:"a sense of personal responsibility for a task"},{w:"directives",d:"official orders or instructions"},{w:"critical thinking",d:"the ability to analyse and evaluate ideas carefully"}],q:[{q:"How do effective managers lead?",opts:["By giving orders","By asking questions","By micromanaging"],a:1},{q:"What does this approach encourage?",opts:["Speed","Critical thinking and ownership","Compliance"],a:1}]},
   {lv:"Advanced",title:"Conflict as opportunity",text:"Workplace conflict, when managed constructively, can be a catalyst for innovation. Teams that avoid all disagreement tend to produce average ideas through conformity, while teams that navigate healthy debate often discover better solutions and build deeper mutual trust in the process.",vocab:[{w:"catalyst",d:"something that speeds up or triggers change"},{w:"conformity",d:"behaviour that matches group expectations"},{w:"constructively",d:"in a way that helps or improves a situation"}],q:[{q:"What can conflict produce when managed well?",opts:["More meetings","Innovation","Conformity"],a:1},{q:"What do teams that avoid disagreement tend to produce?",opts:["Bold ideas","Average ideas","Better solutions"],a:1}]},
   {lv:"Advanced",title:"The art of the executive summary",text:"An executive summary should tell the reader what they need to decide and why, without requiring them to read the full report. The best executive summaries lead with the recommendation, follow with three to five supporting points, and close with a clear call to action. Length should never exceed one page.",vocab:[{w:"recommendation",d:"an advised course of action"},{w:"call to action",d:"a request for the reader to do something specific"},{w:"exceed",d:"to go beyond a limit"}],q:[{q:"What should an exec summary lead with?",opts:["Background","Recommendation","Data"],a:1},{q:"What is the maximum suggested length?",opts:["Half a page","One page","Two pages"],a:1}]},
+  {lv:"Beginner",title:"Booking a meeting room",text:"To book a meeting room, open the calendar app and select an available slot. Rooms on the third floor have video conferencing equipment. Please cancel your booking if your meeting is no longer needed, so others can use the room.",vocab:[{w:"available",d:"free to be used"},{w:"equipment",d:"tools or machines used for a purpose"},{w:"cancel",d:"to stop or call off a planned event"}],q:[{q:"Which floor has video conferencing rooms?",opts:["Second","Third","Fourth"],a:1},{q:"What should you do if you no longer need the room?",opts:["Leave it booked","Cancel the booking","Tell security"],a:1}]},
+  {lv:"Beginner",title:"Lunch break policy",text:"Employees are entitled to a one-hour lunch break between twelve and two PM. Please inform your manager if you plan to take a longer break for a personal appointment. The cafeteria on the ground floor is open until three PM.",vocab:[{w:"entitled",d:"having an official right to something"},{w:"appointment",d:"a planned meeting at a fixed time"},{w:"cafeteria",d:"a place in a building where food is served"}],q:[{q:"How long is the standard lunch break?",opts:["30 minutes","One hour","Two hours"],a:1},{q:"Until what time is the cafeteria open?",opts:["One PM","Two PM","Three PM"],a:2}]},
+  {lv:"Beginner",title:"Setting an out-of-office reply",text:"Before you go on leave, set up an automatic email reply. Mention the dates you will be away and who to contact instead. Keep the message short and polite, and always double-check it before you leave.",vocab:[{w:"automatic",d:"happening by itself without manual action"},{w:"contact",d:"a person to reach for help"},{w:"double-check",d:"to verify something a second time"}],q:[{q:"What should the out-of-office message mention?",opts:["Only the return date","Dates away and an alternate contact","Your phone number"],a:1},{q:"What should you do before leaving?",opts:["Delete old emails","Double-check the message","Call everyone"],a:1}]},
+  {lv:"Intermediate",title:"Giving constructive feedback",text:"Good feedback is specific, timely, and focused on behaviour rather than personality. Instead of saying someone is careless, point to the exact action and its impact. Always pair criticism with at least one concrete suggestion for improvement, and check that the person understood your message.",vocab:[{w:"specific",d:"clear and detailed, not general"},{w:"behaviour",d:"the way a person acts"},{w:"concrete",d:"clear and definite, not vague"}],q:[{q:"What should feedback focus on?",opts:["Personality","Behaviour and impact","Past mistakes only"],a:1},{q:"What should always accompany criticism?",opts:["A warning","A concrete suggestion","Nothing extra"],a:1}]},
+  {lv:"Intermediate",title:"The cost of context switching",text:"Every time you switch between tasks, your brain needs a few minutes to refocus. Frequent interruptions from chat notifications can cost a knowledge worker over an hour of effective focus per day. Blocking quiet time on your calendar is one of the simplest ways to protect deep work.",vocab:[{w:"interruptions",d:"things that stop an activity temporarily"},{w:"refocus",d:"to direct attention back to something"},{w:"deep work",d:"focused, uninterrupted professional work"}],q:[{q:"What causes the biggest loss of focus?",opts:["Long meetings","Frequent interruptions","Working from home"],a:1},{q:"What is suggested to protect focus time?",opts:["Turning off your laptop","Blocking quiet time on the calendar","Working only at night"],a:1}]},
+  {lv:"Intermediate",title:"Why deadlines slip",text:"Most missed deadlines are not caused by laziness but by poor estimation at the start of a project. Teams often underestimate dependencies on other departments and fail to build in buffer time for review cycles. A simple fix is to add twenty percent extra time to any first estimate.",vocab:[{w:"estimation",d:"a rough calculation of time or cost"},{w:"dependencies",d:"things a task relies on to be completed"},{w:"buffer",d:"extra time or space kept as a safety margin"}],q:[{q:"What is the main cause of missed deadlines, according to the text?",opts:["Laziness","Poor estimation","Bad luck"],a:1},{q:"What fix is suggested?",opts:["Work weekends","Add 20% extra time to estimates","Skip review cycles"],a:1}]},
+  {lv:"Advanced",title:"The paradox of choice in product design",text:"Offering customers more options can backfire. Research shows that beyond a certain point, additional choices increase decision fatigue and reduce satisfaction with the final selection, even when the chosen option is objectively good. Effective product teams curate fewer, well-differentiated options rather than maximising variety.",vocab:[{w:"decision fatigue",d:"mental tiredness from making too many choices"},{w:"curate",d:"to carefully select and organise"},{w:"differentiated",d:"made clearly different from alternatives"}],q:[{q:"What happens with too many choices, according to the text?",opts:["Satisfaction increases","Decision fatigue increases","Nothing changes"],a:1},{q:"What do effective product teams do instead?",opts:["Maximise variety","Curate fewer, distinct options","Remove all options"],a:1}]},
+  {lv:"Advanced",title:"Why silence in negotiation is powerful",text:"Inexperienced negotiators often rush to fill silence after making an offer, inadvertently weakening their position by over-explaining or conceding early. Skilled negotiators let a pause sit, allowing the other party to process the offer and often respond with a concession of their own.",vocab:[{w:"inadvertently",d:"without intending to; accidentally"},{w:"conceding",d:"giving up a point in an argument or negotiation"},{w:"skilled",d:"having ability through training or practice"}],q:[{q:"What mistake do inexperienced negotiators make?",opts:["Staying silent","Rushing to fill silence","Asking too many questions"],a:1},{q:"What does a well-placed pause often achieve?",opts:["Ends the negotiation","Prompts a concession from the other side","Confuses the other party"],a:1}]},
 ];
 
 const WRITE=[
@@ -573,6 +725,14 @@ const WRITE=[
   {lv:"Intermediate",title:"Meeting summary email",prompt:"You just had a planning meeting. Write a short follow-up email summarising what was decided and next steps.",checklist:["Thank participants","State key decisions","List next steps with owners","Clear, structured format"],sample:"Hi team,\n\nThanks for a productive session today. Here's a quick summary:\n\nDecisions:\n- Launch date moved to 20th August\n- QA team will run a full regression cycle\n\nNext steps:\n- Nikhil: finalise test plan by Wednesday\n- Pooja: update the client by Friday\n\nThanks all,\nMeera"},
   {lv:"Advanced",title:"Escalation email to leadership",prompt:"A supplier has been unresponsive for 10 days and it's blocking your project. Write a concise escalation email to your VP, explaining the issue, impact, and what you need from them.",checklist:["State the issue in the first line","Quantify the impact","Make a specific ask","Professional, not emotional tone"],sample:"Hi Vikram,\n\nI need to flag a blocking issue: supplier XYZ has been unresponsive for ten days despite three follow-up attempts, and this is now delaying our October launch by an estimated two weeks.\n\nI'd like your support in escalating through the procurement channel or approving an alternative vendor shortlist.\n\nHappy to brief you in a quick call today.\n\nThanks,\nArjun"},
   {lv:"Advanced",title:"Persuasive business case",prompt:"Write a 4-5 sentence memo persuading leadership to invest in a new analytics tool costing $5,000 annually. Make a compelling ROI argument.",checklist:["Lead with the recommendation","Quantify the benefit","Address the cost objection","Clear call to action"],sample:"Recommendation: approve $5,000 annual licence for DataStream analytics.\n\nThe tool will cut manual reporting time from eight hours to under ninety minutes per week — saving approximately 330 staff hours annually, equivalent to roughly $8,200 at current rates. While the upfront cost may seem significant, the payback period is under eight months, and the freed capacity will flow directly into client-facing analysis.\n\nI'd like approval by Friday to onboard ahead of Q4 planning."},
+  {lv:"Beginner",title:"Thank-you note after an interview",prompt:"You had a job interview yesterday. Write a short thank-you email (3-4 sentences) to the interviewer.",checklist:["Thank them for their time","Mention one specific topic discussed","Express continued interest"],sample:"Hi Mr. Sharma,\n\nThank you for taking the time to speak with me yesterday about the Business Analyst role. I really enjoyed our discussion on the team's dashboard projects, and it made me even more excited about the opportunity.\n\nLooking forward to hearing from you.\n\nBest,\nKavya"},
+  {lv:"Beginner",title:"Asking a colleague for help",prompt:"You're stuck on a spreadsheet formula. Write a short, polite message asking a colleague for help.",checklist:["Polite opener","Clearly state what you need","Respect their time"],sample:"Hi Rahul,\n\nSorry to bother you — would you have five minutes today to help me with a tricky VLOOKUP formula? No rush if you're busy, just let me know what works.\n\nThanks so much,\nNeha"},
+  {lv:"Beginner",title:"Welcoming a new team member",prompt:"A new colleague joins your team tomorrow. Write a short welcome message for the team chat.",checklist:["Warm, friendly tone","Introduce what the team does","Offer help"],sample:"Hi everyone, please join me in welcoming Tanya to the team starting tomorrow! She'll be working with us on the reporting pipeline. Feel free to drop by and say hi — always happy to help her settle in. 🎉"},
+  {lv:"Intermediate",title:"Requesting a deadline extension",prompt:"You realise you need two extra days to finish a deliverable. Write an email to your manager explaining why and requesting an extension.",checklist:["State the request early","Give a clear, honest reason","Propose a new date","Show ownership"],sample:"Hi Vivek,\n\nI wanted to flag early that I'll need two extra days on the campaign brief — the client sent revised requirements yesterday that changed the scope. I can deliver by Thursday instead of Tuesday, and I'll keep you posted if anything else comes up.\n\nThanks for understanding,\nSanjay"},
+  {lv:"Intermediate",title:"Responding to a client complaint",prompt:"A client emails saying they're unhappy with a delayed delivery. Write a calm, professional reply.",checklist:["Acknowledge their frustration","Avoid being defensive","Explain next steps","Offer a way to make it right"],sample:"Hi Mr. Iyer,\n\nI'm sorry to hear about the delay — I completely understand the frustration this has caused. I've looked into it and the shipment was held up at customs; it's now cleared and will arrive by Thursday. As an apology, we'd like to offer a 10% credit on your next order.\n\nThank you for your patience,\nMeera"},
+  {lv:"Intermediate",title:"Internal proposal for a process change",prompt:"You think your team's weekly status meeting should move from Monday to Wednesday. Write a short proposal email to your team.",checklist:["State the proposed change","Give the reasoning","Invite feedback","Keep it brief"],sample:"Hi team,\n\nI'd like to propose moving our weekly status meeting from Monday to Wednesday. Mondays tend to be packed with client kickoffs, and a mid-week sync would let us share more concrete updates. Open to thoughts before I update the calendar invite.\n\nThanks,\nArjun"},
+  {lv:"Advanced",title:"Delivering difficult news to a client",prompt:"Your company must inform a key client that a major feature will be delayed by a month. Write a 5-6 sentence email that is honest but reassuring.",checklist:["Lead with the headline, don't bury it","Give a brief, honest reason","Show what you're doing about it","End with confidence, not apology overload"],sample:"Hi Ms. Reddy,\n\nI want to flag early that the analytics module will now ship in early November rather than October — we hit an unexpected integration issue with your data warehouse that needs proper testing rather than a rushed fix. We've added two engineers to close the gap and I'll send you a revised timeline by Friday. I know timing matters here, and I want to make sure we get this right rather than fast.\n\nHappy to jump on a call if useful,\nNikhil"},
+  {lv:"Advanced",title:"Negotiating scope with a stakeholder",prompt:"A stakeholder wants three extra features added to a project with no extra time or budget. Write an email that pushes back constructively.",checklist:["Acknowledge the request positively","Be specific about the tradeoff","Offer alternatives, not just 'no'","Keep tone collaborative"],sample:"Hi Karan,\n\nThanks for sharing these — all three would genuinely add value. Given our current timeline and budget, though, adding them as-is would push the launch by roughly three weeks. I'd suggest we ship the top priority one now and slot the other two into the next sprint, so we don't put the launch date at risk. Happy to talk through the tradeoffs if that helps.\n\nBest,\nPooja"},
 ];
 
 const VOCAB_DATA={
@@ -624,6 +784,30 @@ const VOCAB_DATA={
     {w:"close the deal",pos:"phrase",m:"complete a negotiation successfully",ex:"Let's close the deal before Friday."},
     {w:"non-negotiable",pos:"adj",m:"cannot be changed",ex:"The delivery date is non-negotiable."},
   ],
+  "Presentations":[
+    {w:"key takeaway",pos:"n",m:"the most important point to remember",ex:"The key takeaway is that costs dropped 12%."},
+    {w:"walk through",pos:"v",m:"explain something step by step",ex:"Let me walk you through the new process."},
+    {w:"deep dive",pos:"n",m:"a detailed, thorough look at a topic",ex:"We'll do a deep dive into the numbers next."},
+    {w:"on the same slide",pos:"idiom",m:"having shared understanding (variant of 'on the same page')",ex:"Just want to make sure we're on the same slide here."},
+    {w:"bottom line up front",pos:"phrase",m:"stating the conclusion before the details",ex:"Bottom line up front: we're on track for Q3."},
+    {w:"headline number",pos:"n",m:"the single most important figure in a report",ex:"The headline number this quarter is 14% growth."},
+    {w:"steer the conversation",pos:"v",m:"guide a discussion toward a topic",ex:"Let's steer the conversation back to budget."},
+    {w:"land the point",pos:"v",m:"successfully communicate something clearly",ex:"That last slide really landed the point."},
+    {w:"parking lot",pos:"n",m:"a list of off-topic items to discuss later",ex:"Let's put that in the parking lot for now."},
+    {w:"drill down",pos:"v",m:"examine something in more detail",ex:"Can we drill down into the regional numbers?"},
+  ],
+  "Customer Service":[
+    {w:"turnaround time",pos:"n",m:"the time taken to complete a request",ex:"Our turnaround time is usually 24 hours."},
+    {w:"root cause",pos:"n",m:"the underlying reason for a problem",ex:"We found the root cause of the billing error."},
+    {w:"manage expectations",pos:"v",m:"be clear about what's realistically possible",ex:"I want to manage expectations on the timeline."},
+    {w:"make it right",pos:"phrase",m:"fix a problem to the customer's satisfaction",ex:"We'll make it right with a full refund."},
+    {w:"escalation path",pos:"n",m:"the process for raising unresolved issues",ex:"There's a clear escalation path for urgent issues."},
+    {w:"service level agreement (SLA)",pos:"n",m:"an agreed standard for response or delivery time",ex:"This ticket breaches our SLA."},
+    {w:"goodwill gesture",pos:"n",m:"a free extra given to maintain a good relationship",ex:"We offered a goodwill gesture for the delay."},
+    {w:"churn",pos:"n",m:"customers leaving or cancelling",ex:"Churn increased slightly after the price change."},
+    {w:"first response time",pos:"n",m:"how quickly a customer first hears back",ex:"Our first response time improved to two hours."},
+    {w:"de-escalate",pos:"v",m:"calm down a tense situation",ex:"She de-escalated the call by acknowledging the frustration first."},
+  ],
 };
 
 const GRAMMAR=[
@@ -651,6 +835,22 @@ const GRAMMAR=[
    exp:"<b>on</b>: days/dates. <b>in</b>: months/years/periods. <b>at</b>: clock times. <b>by</b>: deadline. <b>since</b>: starting point. <b>for</b>: duration.",
    examples:["Please send it by Friday.","I've worked here since 2021.","She's been on leave for two weeks.","The call is at 3 PM on Tuesday."],
    quiz:[{q:"Please send this ____ EOD.",opts:["by","until"],a:0},{q:"I've been with the company ____ three years.",opts:["since","for"],a:1},{q:"The training starts ____ 9 AM.",opts:["at","on"],a:0}]},
+  {id:"gerunds",title:"Gerunds vs. infinitives",short:"-ing forms vs. 'to' verbs",
+   exp:"Some verbs take a <b>gerund</b> (-ing): 'avoid sending', 'consider hiring'. Others take an <b>infinitive</b> (to + base): 'plan to send', 'decide to hire'. There's no shortcut — these need to be learned per verb.",
+   examples:["We are considering hiring two more analysts. (consider + -ing)","We plan to hire two more analysts. (plan + to)","I avoid scheduling calls on Fridays. (avoid + -ing)","I need to schedule this by Friday. (need + to)"],
+   quiz:[{q:"We are considering ____ the deadline.",opts:["to extend","extending"],a:1},{q:"She decided ____ the offer.",opts:["to accept","accepting"],a:0},{q:"I'd recommend ____ the client first.",opts:["to call","calling"],a:1}]},
+  {id:"reported",title:"Reported speech at work",short:"he said / she asked",
+   exp:"When reporting what someone said, the tense usually shifts back one step: <b>present → past</b>, <b>will → would</b>. This is common when summarising meetings or emails for someone else.",
+   examples:["Direct: 'I will send it tomorrow.' → Reported: She said she would send it the next day.","Direct: 'We need more time.' → Reported: He said they needed more time.","Direct: 'Can you join the call?' → Reported: She asked if I could join the call.","Direct: 'The budget is approved.' → Reported: They said the budget was approved."],
+   quiz:[{q:"Direct: 'I am finishing it today.' Reported: He said he ____ it that day.",opts:["was finishing","is finishing"],a:0},{q:"Direct: 'We will escalate this.' Reported: They said they ____ escalate it.",opts:["will","would"],a:1},{q:"Direct: 'Did you call the client?' Reported: She asked if I ____ the client.",opts:["had called","call"],a:0}]},
+  {id:"countable",title:"Countable vs. uncountable nouns",short:"feedback, data, advice — careful!",
+   exp:"Many business nouns are <b>uncountable</b> in English even though they feel countable: 'feedback', 'advice', 'information', 'data' (often treated as singular in business use), 'software'. They don't take 'a/an' or a plural -s.",
+   examples:["I got some useful feedback. (NOT 'a feedback')","Can you give me some advice? (NOT 'an advice')","We need more information before deciding. (NOT 'informations')","The data shows a clear trend. (data often used as singular in business)"],
+   quiz:[{q:"Choose the correct sentence:",opts:["I have a feedback for you.","I have some feedback for you."],a:1},{q:"Choose the correct sentence:",opts:["Can you give me an advice?","Can you give me some advice?"],a:1},{q:"Choose the correct sentence:",opts:["We need more informations.","We need more information."],a:1}]},
+  {id:"comparatives",title:"Comparatives for business writing",short:"better than vs. as good as",
+   exp:"Use <b>comparatives</b> (-er / more) to contrast two things, and <b>as...as</b> to show equality. Precision here matters in reports: 'significantly higher than' is very different from 'slightly higher than'.",
+   examples:["Q2 revenue was higher than Q1. (simple comparison)","Q2 revenue was significantly higher than Q1. (adds magnitude)","Our response time is as fast as our top competitor's. (equality)","This quarter performed worse than expected, but better than last year."],
+   quiz:[{q:"Choose the more precise business sentence:",opts:["Sales went up a bit.","Sales increased by 4%, a modest but steady gain."],a:1},{q:"'as good as' expresses:",opts:["Equality","A big difference"],a:0},{q:"Which shows magnitude clearly?",opts:["Costs went up.","Costs rose sharply by 22%."],a:1}]},
 ];
 
 const PRON=[
@@ -664,6 +864,15 @@ const PRON=[
   {word:"development",india:"deh-VEL-up-ment",std:"dih-VEL-up-ment",note:"First vowel is a very short schwa, unstressed."},
   {word:"particularly",india:"par-TIC-yoo-lar-lee",std:"puh-TIK-yuh-ler-lee",note:"Reduce the unstressed syllables — spoken faster than it looks."},
   {word:"necessary",india:"ness-ESS-ary",std:"NES-uh-ser-ee",note:"Stress the first syllable in British English."},
+  {word:"comfortable",india:"KOM-for-ta-bul",std:"KUMF-ter-bul",note:"Often over-articulated — native speakers compress it to 3 syllables."},
+  {word:"vehicle",india:"vee-HI-kul",std:"VEE-ih-kul",note:"Stress the FIRST syllable, not the second."},
+  {word:"opportunity",india:"op-or-TOO-nity",std:"op-er-TOO-nuh-tee",note:"The middle 'tu' often gets over-pronounced — keep it light."},
+  {word:"interesting",india:"in-ter-ES-ting",std:"IN-trist-ing",note:"Native speakers often drop it to 3 syllables: IN-trist-ing."},
+  {word:"basically",india:"BAY-zik-ah-lee",std:"BAY-sik-lee",note:"Four syllables, not five — don't add an extra vowel sound."},
+  {word:"forty",india:"FOR-tee (with hard T)",std:"FOR-dee",note:"American English softens 'tt'/'t' between vowels into a quick 'd' sound."},
+  {word:"environment",india:"en-VI-ron-ment",std:"en-VY-ern-ment",note:"The middle syllable is very light — almost dropped."},
+  {word:"definitely",india:"deh-FIN-it-lee",std:"DEF-nit-lee",note:"Often compressed to 3 syllables in fast natural speech."},
+  {word:"strategy",india:"stra-TEE-jee",std:"STRAT-uh-jee",note:"Stress the FIRST syllable, not the second."},
 ];
 
 const TONGUE_TWISTERS=[
@@ -718,6 +927,42 @@ const SCENARIOS=[
     {who:"Colleague",txt:"Pretty relaxed. Caught up on some reading. Ready for this one?"},
     {who:"You",txt:"As ready as I'll ever be! Should be a good session."},
   ]},
+  {id:"newjoiner",title:"First day introductions",lv:"Beginner",emoji:"🙋",lines:[
+    {who:"Manager",txt:"Welcome to the team! Why don't you tell everyone a bit about yourself?"},
+    {who:"You",txt:"Thanks! I'm joining as a Business Analyst, and I'm really looking forward to working with all of you."},
+    {who:"Colleague",txt:"Great to have you. Let me know if you need anything to get set up."},
+    {who:"You",txt:"I appreciate that — I'll probably have a few questions about our tools in the first week!"},
+  ]},
+  {id:"itsupport",title:"Calling IT support",lv:"Beginner",emoji:"💻",lines:[
+    {who:"You",txt:"Hi, my laptop won't connect to the office Wi-Fi this morning."},
+    {who:"IT",txt:"Sure, let's take a look. Can you tell me what error message you're seeing?"},
+    {who:"You",txt:"It just says 'unable to join network' — I've tried restarting it twice."},
+    {who:"IT",txt:"Okay, let's try resetting your network settings. I'll walk you through it step by step."},
+  ]},
+  {id:"deadline",title:"Telling your manager about a delay",lv:"Intermediate",emoji:"⏰",lines:[
+    {who:"You",txt:"I wanted to flag early — the report won't be ready by today's deadline."},
+    {who:"Manager",txt:"Okay, what's going on?"},
+    {who:"You",txt:"The data from finance came in late, and I need another day to validate the numbers properly rather than rush them."},
+    {who:"Manager",txt:"Thanks for telling me now rather than at the deadline. Tomorrow works — just keep me posted."},
+  ]},
+  {id:"crossteam",title:"Asking another team for help",lv:"Intermediate",emoji:"🤲",lines:[
+    {who:"You",txt:"Hi! Do you have bandwidth this week to help us debug an issue in the reporting pipeline?"},
+    {who:"Colleague",txt:"We're pretty stretched, but tell me more about the issue."},
+    {who:"You",txt:"It's a data mismatch that's affecting client-facing dashboards, so it's fairly high priority on our end."},
+    {who:"Colleague",txt:"Got it — that changes things. Let's grab 30 minutes this afternoon and take a look together."},
+  ]},
+  {id:"layoffnews",title:"Sharing a difficult organisational update",lv:"Advanced",emoji:"📋",lines:[
+    {who:"Manager",txt:"I need to share some difficult news — the team is being restructured and two roles will be affected."},
+    {who:"You",txt:"That's tough to hear. Can you share what the timeline looks like, and what support will be available?"},
+    {who:"Manager",txt:"We're finalising details this week. There will be a severance package and outplacement support for anyone affected."},
+    {who:"You",txt:"I appreciate you being upfront. I think the team will want clarity as soon as possible, even if it's hard news."},
+  ]},
+  {id:"pitch",title:"Pitching an idea to leadership",lv:"Advanced",emoji:"🚀",lines:[
+    {who:"You",txt:"I'd like five minutes to walk you through an idea that could reduce our reporting turnaround by half."},
+    {who:"Leader",txt:"I'm listening — what's the core idea?"},
+    {who:"You",txt:"Right now three teams manually pull the same data separately. A shared automated pipeline would save roughly 15 hours a week across the org."},
+    {who:"Leader",txt:"That's compelling. Put together a one-pager with the cost and timeline, and let's discuss in next week's leadership sync."},
+  ]},
 ];
 
 const INTERVIEW=[
@@ -727,6 +972,12 @@ const INTERVIEW=[
   {lv:"Intermediate",q:"Describe a time you failed or made a mistake.",guide:"Show self-awareness and recovery — not perfection.",star:{S:"What was the situation?",T:"What were you responsible for?",A:"What went wrong and what did you do to fix it?",R:"What did you change as a result?"},tips:["Choose a real but not catastrophic example","Don't over-apologise or over-explain","The 'result' should show growth"],sample:"Early in my career I underestimated the scope of a market sizing exercise (S). I was the lead on it and assumed I had more data than I did (T). I caught the gap the night before the deadline and worked through the night to fill it, but it still went out late (A). I now build in a structured scope check at the start of every project and have never missed a deadline since (R)."},
   {lv:"Advanced",q:"Where do you see yourself in five years?",guide:"Show ambition. Tie your growth to the company's direction. Avoid sounding like you'll leave soon.",star:null,tips:["Research the company's roadmap first","Talk about contribution, not just titles","Make it about growth you can bring them"],sample:"In five years I'd like to be heading a data function — ideally here, given how fast you're scaling your analytics capability. I see the next two years as a time to deepen my domain knowledge in FMCG, build my stakeholder management skills, and take on cross-functional projects. By year three or four, I'd want to be the go-to person for translating commercial questions into data answers."},
   {lv:"Advanced",q:"Why should we hire you over other candidates?",guide:"Be specific, confident, and evidence-based. This is your elevator pitch.",star:null,tips:["Reference the job description","Quantify your impact if possible","This is not the moment for excessive modesty"],sample:"Because I bring something that's hard to find at this level: strong analytical rigour combined with commercial instinct. I built a forecasting model at my current company that cut projection errors by 28%, and I presented it to the CFO in terms that led to a budget decision the same day. I've read your JD carefully — that exact combination of technical depth and business communication is what you're looking for, and it's genuinely what I do best."},
+  {lv:"Beginner",q:"Why do you want to work here?",guide:"Show you've done research. Connect their needs to your motivation, not just your needs.",star:null,tips:["Mention something specific about the company","Avoid generic answers like 'good opportunity'","Keep it under 45 seconds"],sample:"I've followed your company's growth in the hearing healthcare space, and I really admire how data-driven your customer experience decisions are. I want to be part of a team where my analytical work directly improves people's lives, and that's exactly what this role offers."},
+  {lv:"Beginner",q:"What are your salary expectations?",guide:"Give a realistic range based on research, not a single fixed number.",star:null,tips:["Research market rates beforehand","Give a range, not one number","Stay open to negotiation"],sample:"Based on my research and experience level, I'm looking at a range of 8 to 10 lakhs, but I'm flexible depending on the full compensation package and growth opportunities here."},
+  {lv:"Intermediate",q:"Tell me about a time you had to learn something quickly.",guide:"Show adaptability and a clear learning process, not just the outcome.",star:{S:"What was the situation and the new skill needed?",T:"What was your responsibility?",A:"How exactly did you learn it — resources, practice, who helped?",R:"How did it turn out?"},tips:["Pick a genuine example, even a small one","Show your learning process, not just the result","End with how you applied it"],sample:"Our team adopted a new BI tool with two weeks' notice before a client demo (S). I was responsible for migrating our core dashboard (T). I spent evenings on the tool's documentation, built a test dashboard first, and asked a colleague who'd used it before to review my work (A). I delivered the migration a day early and now I'm the go-to person for that tool on our team (R)."},
+  {lv:"Intermediate",q:"How do you prioritise when everything feels urgent?",guide:"Show a clear, repeatable method, not just 'I work hard'.",star:null,tips:["Mention a specific framework or method you use","Give a concrete example","Show you communicate priorities to others"],sample:"I usually start by separating what's truly time-sensitive from what feels urgent but isn't. For example, when three deliverables landed on the same day last month, I checked with each stakeholder on their real deadline, found one had flexibility, and communicated a revised plan to everyone within the hour rather than just guessing."},
+  {lv:"Advanced",q:"Tell me about a time you disagreed with your manager.",guide:"Show you can disagree respectfully and back it with reasoning, without sounding insubordinate.",star:{S:"What was the disagreement about?",T:"What was at stake, and what was your role?",A:"How did you raise the disagreement?",R:"What was the outcome, regardless of who was 'right'?"},tips:["Never frame your manager negatively","Focus on the reasoning, not the conflict","Show respect for the final decision either way"],sample:"My manager wanted to launch a feature without a beta phase to hit a deadline (S). I was responsible for the rollout plan and was concerned about undetected bugs reaching all customers at once (T). I shared data from a past launch where skipping beta caused a spike in support tickets, and proposed a one-week beta with our most engaged customers instead (A). She agreed to the compromise, the beta caught two real issues, and it's now part of our standard process (R)."},
+  {lv:"Advanced",q:"How do you handle ambiguity in a project?",guide:"Senior-level question — show you can create structure where none exists, not just tolerate uncertainty.",star:null,tips:["Give a concrete method for clarifying ambiguity","Show comfort making decisions with incomplete information","Mention how you keep stakeholders aligned along the way"],sample:"When a project arrives without clear requirements, my first move is to write down my assumptions and circulate them for a quick sanity check before doing any real work — it surfaces gaps early and cheaply. I then break the work into smaller milestones so we can course-correct often rather than discovering a mismatch at the very end. That approach turned a vaguely-scoped 'improve retention' brief into a concrete three-month roadmap within the first week."},
 ];
 
 const IDIOMS=[
@@ -742,6 +993,16 @@ const IDIOMS=[
   {phrase:"think outside the box",meaning:"Think creatively beyond conventional approaches",ex:"This problem needs us to think outside the box."},
   {phrase:"game changer",meaning:"Something that fundamentally changes a situation",ex:"That acquisition was a real game changer for us."},
   {phrase:"put all cards on the table",meaning:"Be completely honest and open",ex:"Let's put all cards on the table before we negotiate."},
+  {phrase:"get the ball rolling",meaning:"Start a process or activity",ex:"Let's get the ball rolling on the new campaign."},
+  {phrase:"back to the drawing board",meaning:"Start over after a failed attempt",ex:"The client rejected it, so it's back to the drawing board."},
+  {phrase:"on the same wavelength",meaning:"Thinking in a similar way to someone else",ex:"Good — we're on the same wavelength about the budget."},
+  {phrase:"keep someone in the loop",meaning:"Keep someone informed",ex:"Please keep me in the loop on the client's decision."},
+  {phrase:"jump on a call",meaning:"Quickly join a phone or video call",ex:"Can we jump on a call to sort this out?"},
+  {phrase:"raise the bar",meaning:"Set a higher standard",ex:"This new hire really raised the bar for the team."},
+  {phrase:"in the pipeline",meaning:"Currently being planned or developed",ex:"We have three new features in the pipeline."},
+  {phrase:"par for the course",meaning:"Something expected or typical in a situation",ex:"Delays like this are par for the course during migrations."},
+  {phrase:"hit a snag",meaning:"Encounter an unexpected problem",ex:"We hit a snag with the vendor's API last week."},
+  {phrase:"learning curve",meaning:"The rate at which someone gains skill or knowledge",ex:"There's a steep learning curve with this new tool."},
 ];
 
 // Word match game data
@@ -765,20 +1026,28 @@ const MATCH_SETS=[
     {a:"game changer",b:"fundamentally changes things"},
   ]},
 ];
+// Unlimited match sets — built live from the full vocab + idiom pools, reshuffled on demand
+function genMatchSets(count=6){
+  const rng=bucketRng("match-gen");
+  const allWordPairs=Object.values(VOCAB_DATA).flat().map(v=>({a:v.w,b:v.m}));
+  const allIdiomPairs=IDIOMS.map(id=>({a:id.phrase,b:id.meaning}));
+  const allPairs=shuffled(rng,[...allWordPairs,...allIdiomPairs]);
+  const sets=[];
+  for(let i=0;i<count;i++){
+    const chunk=allPairs.slice(i*4,i*4+4);
+    if(chunk.length<4) break;
+    sets.push({title:`Match set ${i+1} — workplace vocabulary`,pairs:chunk});
+  }
+  return sets.length?sets:MATCH_SETS;
+}
+// Unlimited scramble word pool — drawn from vocabulary + a curated business-word list
+const SCRAMBLE_WORDS=["schedule","feedback","proposal","deadline","stakeholder","escalate","negotiate","benchmark","onboarding","bandwidth","deliverable","workflow","turnaround","milestone","procurement","compliance","leverage","priority","alignment","initiative"];
 
-// Fill in the blank sentences
-const FILL_SENTENCES=[
-  {lv:"Beginner",sentence:"Please ______ the report by end of day.",word:"send",options:["send","sent","sending"]},
-  {lv:"Beginner",sentence:"I am calling ______ the account manager.",word:"for",options:["for","about","from"]},
-  {lv:"Beginner",sentence:"Could you please ______ that again?",word:"repeat",options:["repeat","repeated","repeating"]},
-  {lv:"Intermediate",sentence:"I'll ______ on this and get back to you by Friday.",word:"follow up",options:["follow up","pick up","catch up"]},
-  {lv:"Intermediate",sentence:"We need to ______ the launch by two weeks due to testing.",word:"push back",options:["push back","pull forward","move up"]},
-  {lv:"Intermediate",sentence:"Could you ______ the legal team on this email?",word:"loop in",options:["loop in","bring in","let in"]},
-  {lv:"Advanced",sentence:"Our strategy has ______ our cost base significantly.",word:"optimised",options:["optimised","affected","restructured"]},
-  {lv:"Advanced",sentence:"We should ______ before making any assumptions about the data.",word:"validate",options:["validate","check","verify"]},
-];
 
-// Typing challenge sentences
+// Fill in the blank sentences — sourced from the expandable FILL_BANK (genFillSet) for unlimited variety
+const FILL_SENTENCES=[...FILL_BANK.Beginner,...FILL_BANK.Intermediate,...FILL_BANK.Advanced].map((f,i)=>({lv:Object.keys(FILL_BANK).find(lv=>FILL_BANK[lv].includes(f)),...f}));
+
+// Typing challenge sentences — kept as a static fallback pool; genTypeSet() is used for live unlimited generation
 const TYPE_SENTENCES=[
   {lv:"Beginner",text:"Please send me the document when you are ready."},
   {lv:"Beginner",text:"The meeting is scheduled for Monday at ten AM."},
@@ -788,6 +1057,7 @@ const TYPE_SENTENCES=[
   {lv:"Advanced",text:"With respect, I would push back on that assumption pending further data."},
 ];
 
+
 /* ============================================================
    PANEL RENDERERS
 ============================================================ */
@@ -795,16 +1065,16 @@ const TYPE_SENTENCES=[
 // ========== DASHBOARD ==========
 function dashPanel(){
   const mods=[
-    {tab:"listen",icon:"🎧",name:"Listening",desc:"Fill-in-the-blank & comprehension"},
-    {tab:"speak",icon:"🎤",name:"Speaking",desc:"Say phrases aloud, get feedback"},
-    {tab:"read",icon:"📖",name:"Reading",desc:"Read passages, learn new words"},
-    {tab:"write",icon:"✍️",name:"Writing",desc:"Emails, memos, replies"},
-    {tab:"vocab",icon:"💬",name:"Vocabulary",desc:"Flashcards across 4 topics"},
-    {tab:"grammar",icon:"📐",name:"Grammar",desc:"6 grammar topics with quizzes"},
-    {tab:"games",icon:"🎮",name:"Games",desc:"Word match, scramble & typing"},
+    {tab:"listen",icon:"🎧",name:"Listening",desc:"Fill-in-the-blank & comprehension — new sets daily"},
+    {tab:"speak",icon:"🎤",name:"Speaking",desc:"Unlimited generated phrases + feedback"},
+    {tab:"read",icon:"📖",name:"Reading",desc:`${READ.length}+ passages, rotating daily`},
+    {tab:"write",icon:"✍️",name:"Writing",desc:`${WRITE.length}+ prompts — emails, memos, replies`},
+    {tab:"vocab",icon:"💬",name:"Vocabulary",desc:`Flashcards across ${Object.keys(VOCAB_DATA).length} topics`},
+    {tab:"grammar",icon:"📐",name:"Grammar",desc:`${GRAMMAR.length} grammar topics with quizzes`},
+    {tab:"games",icon:"🎮",name:"Games",desc:"Unlimited word match, scramble & typing"},
     {tab:"speak2",icon:"🧑‍💼",name:"Interview",desc:"STAR method & model answers"},
     {tab:"pron",icon:"🗣️",name:"Accent",desc:"Indian English coaching"},
-    {tab:"roleplay",icon:"🎭",name:"Roleplay",desc:"7 real workplace scenarios"},
+    {tab:"roleplay",icon:"🎭",name:"Roleplay",desc:`${SCENARIOS.length} real workplace scenarios`},
   ];
   const totalDone=Object.keys(S.done).length;
   const todayGoals=[
@@ -846,11 +1116,14 @@ function dashPanel(){
 
 // ========== LISTENING ==========
 function listenPanel(){
-  const items=LISTEN.filter(d=>d.lv===S.level);
+  const pool=LISTEN.filter(d=>d.lv===S.level);
+  const rng=bucketRng("listen-"+S.level);
+  const items=pickN(rng,pool,Math.min(5,pool.length));
   return `
-  <div class="sh"><div><h2>🎧 Listening Lab</h2><div class="sub">${items.length} exercises · Press ▶ to hear, then fill in the blanks and answer questions.</div></div>${lvHTML()}</div>
+  <div class="sh"><div><h2>🎧 Listening Lab</h2><div class="sub">${items.length} of ${pool.length} exercises today · Press ▶ to hear, then fill in the blanks and answer questions.</div></div>${lvHTML()}</div>
+  <div class="btn-row" style="margin-top:-10px;margin-bottom:16px;">${refreshBtn("listen-"+S.level,"🎲 New exercises")}</div>
   ${items.map((it,i)=>{
-    const key=`listen-${S.level}-${i}`;
+    const key=contentKey(`listen-${S.level}`,it.title);
     const blanked=it.blanks.reduce((t,w)=>t.replace(new RegExp(`\\b${w}\\b`,'i'),`<span class="blank" title="${w}">[…]</span>`),it.audio);
     return `
     <div class="card ${S.done[key]?'':''}">
@@ -880,13 +1153,16 @@ function listenPanel(){
 
 // ========== SPEAKING ==========
 function speakPanel(){
-  const items=SPEAK.filter(d=>d.lv===S.level);
+  const seed=SPEAK.filter(d=>d.lv===S.level);
+  const generated=genSpeakSet(S.level,6);
+  const items=[...seed,...generated];
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   return `
-  <div class="sh"><div><h2>🎤 Speaking Studio</h2><div class="sub">Listen to the model → repeat out loud → record to check your accuracy.</div></div>${lvHTML()}</div>
+  <div class="sh"><div><h2>🎤 Speaking Studio</h2><div class="sub">${items.length} phrases today · new ones generated daily</div></div>${lvHTML()}</div>
   <div class="fb info show" style="margin-bottom:14px;">${SR?"🟢 Speech recognition available — click Record and speak clearly.":"ℹ️ No speech recognition in this browser. Listen and practice out loud — then mark done."}</div>
+  <div class="btn-row" style="margin-top:-6px;margin-bottom:14px;">${refreshBtn("speak-"+S.level,"🎲 New phrases")}</div>
   ${items.map((it,i)=>{
-    const key=`speak-${S.level}-${i}`;
+    const key=contentKey(`speak-${S.level}`,it.ph);
     return `
     <div class="card">
       <span class="tag teal">${it.lv} ${S.done[key]?'<span class="done-badge">✓ done</span>':''}</span>
@@ -910,11 +1186,14 @@ function speakPanel(){
 
 // ========== READING ==========
 function readPanel(){
-  const items=READ.filter(d=>d.lv===S.level);
+  const pool=READ.filter(d=>d.lv===S.level);
+  const rng=bucketRng("read-"+S.level);
+  const items=pickN(rng,pool,Math.min(4,pool.length));
   return `
-  <div class="sh"><div><h2>📖 Reading Room</h2><div class="sub">Read the passage, hover words for meanings, answer questions.</div></div>${lvHTML()}</div>
+  <div class="sh"><div><h2>📖 Reading Room</h2><div class="sub">${items.length} of ${pool.length} passages today · hover words for meanings, answer questions.</div></div>${lvHTML()}</div>
+  <div class="btn-row" style="margin-top:-10px;margin-bottom:16px;">${refreshBtn("read-"+S.level,"🎲 New passages")}</div>
   ${items.map((it,i)=>{
-    const key=`read-${S.level}-${i}`;
+    const key=contentKey(`read-${S.level}`,it.title);
     let txt=it.text;
     it.vocab.forEach(v=>{
       txt=txt.replace(new RegExp(`\\b(${v.w}\\w*)\\b`,'i'),`<span style="border-bottom:1.5px dashed var(--teal);cursor:help;position:relative;" title="${v.d}">$1</span>`);
@@ -941,11 +1220,14 @@ function readPanel(){
 
 // ========== WRITING ==========
 function writePanel(){
-  const items=WRITE.filter(d=>d.lv===S.level);
+  const pool=WRITE.filter(d=>d.lv===S.level);
+  const rng=bucketRng("write-"+S.level);
+  const items=pickN(rng,pool,Math.min(4,pool.length));
   return `
-  <div class="sh"><div><h2>✍️ Writing Workshop</h2><div class="sub">Write your answer, then compare with a model. Focus on clarity and natural tone.</div></div>${lvHTML()}</div>
+  <div class="sh"><div><h2>✍️ Writing Workshop</h2><div class="sub">${items.length} of ${pool.length} prompts today · write your answer, then compare with a model.</div></div>${lvHTML()}</div>
+  <div class="btn-row" style="margin-top:-10px;margin-bottom:16px;">${refreshBtn("write-"+S.level,"🎲 New prompts")}</div>
   ${items.map((it,i)=>{
-    const key=`write-${S.level}-${i}`;
+    const key=contentKey(`write-${S.level}`,it.title);
     return `
     <div class="card">
       <span class="tag rose">${it.lv} ${S.done[key]?'<span class="done-badge">✓ done</span>':''}</span>
@@ -971,10 +1253,9 @@ function vocabPanel(){
   const deck=VOCAB_DATA[S.flashDeck];
   const card=deck[S.flashIdx];
   const known=deck.filter((c,i)=>S.vocabKnown[S.flashDeck+":"+i]).length;
-  // fill sentence for this deck word
-  const fill=FILL_SENTENCES.filter(f=>f.lv===S.level);
+  const fill=genFillSet(S.level,4);
   return `
-  <div class="sh"><div><h2>💬 Vocabulary Builder</h2><div class="sub">Tap to flip · ▶ to hear · Mark words you know</div></div></div>
+  <div class="sh"><div><h2>💬 Vocabulary Builder</h2><div class="sub">${deckNames.length} topic decks · Tap to flip · ▶ to hear · Mark words you know</div></div></div>
   <div class="cat-scroll">${deckNames.map(d=>`<button class="cat-chip ${d===S.flashDeck?"active":""}" data-deck="${d}">${d}</button>`).join("")}</div>
   
   <div class="flashcard-scene" id="flashScene">
@@ -998,8 +1279,9 @@ function vocabPanel(){
     <button class="btn ghost" data-flash="next">Next →</button>
   </div>
 
-  <div class="sh" style="margin-top:8px;"><h2>Fill in the blank</h2><div class="sub">Tap the right word to complete each sentence.</div></div>
-  ${fill.slice(0,3).map((f,i)=>fillCard(f,`fill-v-${S.level}-${i}`)).join("")}
+  <div class="sh" style="margin-top:8px;"><h2>Fill in the blank</h2><div class="sub">New sentences daily · tap the right word to complete each one.</div></div>
+  <div class="btn-row" style="margin-top:-10px;margin-bottom:16px;">${refreshBtn("fill-"+S.level,"🎲 New sentences")}</div>
+  ${fill.map((f,i)=>fillCard(f,contentKey(`fill-v-${S.level}`,f.sentence))).join("")}
   `;
 }
 
@@ -1064,19 +1346,20 @@ function gamesPanel(){
 }
 
 function matchGame(){
-  const setData=MATCH_SETS[S.matchSetIdx||0];
+  const allSets=genMatchSets(8);
+  const setData=allSets[(S.matchSetIdx||0)%allSets.length];
   const allPairs=setData.pairs;
   const words=allPairs.map(p=>p.a);
   const defs=allPairs.map(p=>p.b);
-  const shuffled=[...words,...defs].sort(()=>Math.random()-0.5);
+  const tileOrder=[...words,...defs].sort(()=>Math.random()-0.5);
   if(!window._matchState||window._matchState.set!==S.matchSetIdx){
-    window._matchState={set:S.matchSetIdx||0,tiles:shuffled,selected:[],matched:[]};
+    window._matchState={set:S.matchSetIdx||0,tiles:tileOrder,selected:[],matched:[]};
   }
   const ms=window._matchState;
   const allMatched=ms.matched.length===allPairs.length*2;
   return `
   <div class="card">
-    <span class="tag violet">Word Match — Set ${(S.matchSetIdx||0)+1}/${MATCH_SETS.length}</span>
+    <span class="tag violet">Word Match — Set ${(S.matchSetIdx||0)+1}/${allSets.length} <span style="color:var(--text3);">· unlimited, reshuffles daily</span></span>
     <h3 style="font-family:var(--font);font-size:1rem;margin-bottom:14px;">${setData.title}</h3>
     <div class="match-board" id="matchBoard">
       ${ms.tiles.map((t,i)=>{
@@ -1089,12 +1372,13 @@ function matchGame(){
     <div class="btn-row mt-sm">
       ${allMatched?`<button class="btn violet" data-next-match="1">Next set →</button>`:''}
       <button class="btn ghost sm" onclick="window._matchState=null;S.matchSetIdx=(S.matchSetIdx||0);render();">Reset</button>
+      ${refreshBtn("match-gen","🎲 Shuffle all sets")}
     </div>
   </div>`;
 }
 
 function scrambleGame(){
-  const wordList=["schedule","feedback","proposal","deadline","stakeholder","escalate","negotiate","benchmark"];
+  const wordList=SCRAMBLE_WORDS;
   if(!window._scramble){
     const w=wordList[Math.floor(Math.random()*wordList.length)];
     window._scramble={word:w,letters:[...w].sort(()=>Math.random()-0.5),answer:[],solved:false};
@@ -1102,7 +1386,7 @@ function scrambleGame(){
   const sc=window._scramble;
   return `
   <div class="card">
-    <span class="tag teal">Word Scramble — workplace vocabulary</span>
+    <span class="tag teal">Word Scramble — workplace vocabulary <span style="color:var(--text3);">· ${wordList.length}+ words, never runs out</span></span>
     <p style="color:var(--text2);font-size:0.85rem;margin-bottom:4px;">Tap letters to build the correct word:</p>
     <div class="scramble-letters">
       ${sc.letters.map((l,i)=>`<div class="scram-letter ${sc.answer.includes(i)?'picked':''}" data-scram-pick="${i}">${l}</div>`).join("")}
@@ -1123,7 +1407,7 @@ function scrambleGame(){
 }
 
 function typeGame(){
-  const items=TYPE_SENTENCES.filter(t=>t.lv===S.level);
+  const items=genTypeSet(S.level,8);
   if(!window._typeState||window._typeState.level!==S.level){
     window._typeState={level:S.level,idx:0,typed:"",started:false,startTime:0,done:false,wpm:0};
   }
@@ -1139,7 +1423,7 @@ function typeGame(){
   }).join("");
   return `
   <div class="card">
-    <span class="tag sky">Typing Challenge — accuracy & speed</span>
+    <span class="tag sky">Typing Challenge — accuracy & speed <span style="color:var(--text3);">· fresh sentences daily</span></span>
     ${ts.done?`<div class="fb good show">🎯 Done! Speed: <b>${ts.wpm} WPM</b> · Try the next sentence.</div>`:''}
     <div class="type-display">${chars}</div>
     <textarea id="typeInput" placeholder="Start typing the sentence above…" rows="2" style="margin-top:10px;" ${ts.done?'disabled':''}>${ts.typed}</textarea>
@@ -1148,41 +1432,68 @@ function typeGame(){
       <span class="spacer"></span>
       <button class="btn ghost sm" onclick="window._typeState=null;render();">Reset</button>
       ${ts.done?`<button class="btn amber" onclick="window._typeState.idx=(window._typeState.idx+1)%${items.length};window._typeState.typed='';window._typeState.done=false;window._typeState.started=false;render();">Next sentence</button>`:''}
+      ${refreshBtn("type-"+S.level,"🎲 New batch")}
     </div>
   </div>`;
 }
 
+
+const GRAMMAR_TRAPS=[
+  {
+    title:"Which sentence is grammatically correct?",
+    cards:[
+      {txt:"I have worked here since three years.",correct:false,why:"Use 'for' with durations, not 'since'. Say: 'for three years'"},
+      {txt:"She has been waiting since 9 AM.",correct:true,why:"Correct! 'Since' + specific time point."},
+      {txt:"We met the client since Monday.",correct:false,why:"'Since' needs present perfect: 'We have met the client since Monday' or 'We met the client on Monday'"},
+    ],
+  },
+  {
+    title:"Which is the most professional response?",
+    cards:[
+      {txt:"I'll revert back to you.",correct:false,why:"'Revert back' is redundant — 'revert' already means 'go back'. Also, 'revert' as 'reply' is Indian English — say 'I'll get back to you'."},
+      {txt:"Let me get back to you by EOD.",correct:true,why:"Clear, professional, and globally understood."},
+      {txt:"I'll come back to you when I know.",correct:false,why:"Not wrong, but vague. 'By EOD' or a specific time is much stronger."},
+    ],
+  },
+  {
+    title:"Spot the incorrect usage:",
+    cards:[
+      {txt:"Please do the needful.",correct:false,why:"Classic Indian English phrase — not used in global business. Say: 'Please take care of this' or 'Please proceed accordingly'."},
+      {txt:"Please proceed as discussed.",correct:true,why:"Natural and universally understood."},
+      {txt:"Let me know if you need anything further.",correct:true,why:"Polite, professional standard email closing."},
+    ],
+  },
+  {
+    title:"Which sentence uses the correct preposition?",
+    cards:[
+      {txt:"The report is pending since two days.",correct:false,why:"Use 'for' with a duration: 'pending for two days'. 'Since' needs a specific starting point like 'since Monday'."},
+      {txt:"The report has been pending for two days.",correct:true,why:"Correct — 'for' + duration, with present perfect."},
+      {txt:"I will revert you shortly.",correct:false,why:"'Revert' is intransitive — you can't 'revert someone'. Say 'I will revert to you' or better, 'I'll get back to you'."},
+    ],
+  },
+  {
+    title:"Which version sounds most natural to a global audience?",
+    cards:[
+      {txt:"Kindly do one thing, send the file.",correct:false,why:"'Kindly do one thing' is a direct translation pattern from Indian languages — not natural in global business English. Say 'Could you please send the file?'"},
+      {txt:"Could you please send the file?",correct:true,why:"Clear, polite, and standard in any English-speaking business context."},
+      {txt:"Please find the same attached.",correct:false,why:"'The same' as a stand-in noun is dated/formal Indian English. Say 'Please find it attached' or name the document directly."},
+    ],
+  },
+  {
+    title:"Which sentence correctly uses the passive voice?",
+    cards:[
+      {txt:"The decision was took by the board.",correct:false,why:"Incorrect past participle — it should be 'taken', not 'took'. Correct: 'The decision was taken by the board.'"},
+      {txt:"The proposal was reviewed by three teams.",correct:true,why:"Correct passive structure: was + past participle + by + agent."},
+      {txt:"The budget is approving next week.",correct:false,why:"This needs the passive 'is being approved' or future 'will be approved', not the active-looking '-ing' form here."},
+    ],
+  },
+];
 function trueLieGame(){
-  const sets=[
-    {
-      title:"Which sentence is grammatically correct?",
-      cards:[
-        {txt:"I have worked here since three years.",correct:false,why:"Use 'for' with durations, not 'since'. Say: 'for three years'"},
-        {txt:"She has been waiting since 9 AM.",correct:true,why:"Correct! 'Since' + specific time point."},
-        {txt:"We met the client since Monday.",correct:false,why:"'Since' needs present perfect: 'We have met the client since Monday' or 'We met the client on Monday'"},
-      ],
-    },
-    {
-      title:"Which is the most professional response?",
-      cards:[
-        {txt:"I'll revert back to you.",correct:false,why:"'Revert back' is redundant — 'revert' already means 'go back'. Also, 'revert' as 'reply' is Indian English — say 'I'll get back to you'."},
-        {txt:"Let me get back to you by EOD.",correct:true,why:"Clear, professional, and globally understood."},
-        {txt:"I'll come back to you when I know.",correct:false,why:"Not wrong, but vague. 'By EOD' or a specific time is much stronger."},
-      ],
-    },
-    {
-      title:"Spot the incorrect usage:",
-      cards:[
-        {txt:"Please do the needful.",correct:false,why:"Classic Indian English phrase — not used in global business. Say: 'Please take care of this' or 'Please proceed accordingly'."},
-        {txt:"Please proceed as discussed.",correct:true,why:"Natural and universally understood."},
-        {txt:"Let me know if you need anything further.",correct:true,why:"Polite, professional standard email closing."},
-      ],
-    },
-  ];
+  const sets=GRAMMAR_TRAPS;
   const set=sets[S.trueLieSet||0];
   return `
   <div class="card">
-    <span class="tag coral">Grammar Trap — spot the mistake</span>
+    <span class="tag coral">Grammar Trap — spot the mistake <span style="color:var(--text3);">· ${sets.length} sets</span></span>
     <h3 style="font-family:var(--font);font-size:1rem;margin-bottom:14px;">${set.title}</h3>
     <div class="tl-cards" id="tlCards">
       ${set.cards.map((c,i)=>`
@@ -1202,9 +1513,13 @@ function trueLieGame(){
 }
 
 function idiomGame(){
-  const chunk=IDIOMS.slice(0,6);
+  const rng=bucketRng("idiom-flip");
+  const order=shuffled(rng,IDIOMS);
+  const chunk=order.slice(0,6);
+  const rest=order.slice(6);
   return `
-  <div class="sh" style="margin-bottom:10px;"><h2>Idiom Flip Cards</h2><div class="sub">Tap to reveal meaning · ▶ to hear in a sentence</div></div>
+  <div class="sh" style="margin-bottom:10px;"><h2>Idiom Flip Cards</h2><div class="sub">${IDIOMS.length} idioms in rotation · Tap to reveal meaning · ▶ to hear in a sentence</div></div>
+  <div class="btn-row" style="margin-bottom:14px;">${refreshBtn("idiom-flip","🎲 New idioms")}</div>
   <div class="two-col">
     ${chunk.map((id,i)=>{
       const flipped=S.idiomFlips[i];
@@ -1232,7 +1547,7 @@ function idiomGame(){
     <div class="flex">
       <span class="tag" style="margin:0;">More idioms</span>
     </div>
-    <div style="margin-top:10px;">${IDIOMS.slice(6).map(id=>`<div style="margin-bottom:8px;padding:10px 12px;background:var(--ink3);border-radius:var(--rad-sm);display:flex;align-items:center;gap:10px;"><span style="font-family:var(--font);font-weight:700;min-width:160px;font-size:0.88rem;">${id.phrase}</span><span style="color:var(--text2);font-size:0.82rem;flex:1;">${id.meaning}</span><button class="btn ghost sm" data-play="${esc(id.ex)}">▶</button></div>`).join("")}</div>
+    <div style="margin-top:10px;">${rest.map(id=>`<div style="margin-bottom:8px;padding:10px 12px;background:var(--ink3);border-radius:var(--rad-sm);display:flex;align-items:center;gap:10px;"><span style="font-family:var(--font);font-weight:700;min-width:160px;font-size:0.88rem;">${id.phrase}</span><span style="color:var(--text2);font-size:0.82rem;flex:1;">${id.meaning}</span><button class="btn ghost sm" data-play="${esc(id.ex)}">▶</button></div>`).join("")}</div>
   </div>`;
 }
 
@@ -1240,9 +1555,9 @@ function idiomGame(){
 function interviewPanel(){
   const items=INTERVIEW.filter(d=>d.lv===S.level);
   return `
-  <div class="sh"><div><h2>🧑‍💼 Interview Prep</h2><div class="sub">STAR method practice with model answers and audio.</div></div>${lvHTML()}</div>
+  <div class="sh"><div><h2>🧑‍💼 Interview Prep</h2><div class="sub">${items.length} questions at this level · STAR method practice with model answers and audio.</div></div>${lvHTML()}</div>
   ${items.map((it,i)=>{
-    const key=`iv-${S.level}-${i}`;
+    const key=contentKey(`iv-${S.level}`,it.q);
     return `
     <div class="card" style="border-color:rgba(167,139,255,0.2);">
       <span class="tag violet">${it.lv} ${S.done[key]?'<span class="done-badge">✓ done</span>':''}</span>
@@ -1314,7 +1629,7 @@ function pronPanel(){
 function roleplayPanel(){
   const sc=SCENARIOS.find(s=>s.id===S.scenarioId)||SCENARIOS[0];
   return `
-  <div class="sh"><h2>🎭 Workplace Roleplay</h2><div class="sub">7 real conversations — meetings, calls, negotiations, apologies and more.</div></div>
+  <div class="sh"><h2>🎭 Workplace Roleplay</h2><div class="sub">${SCENARIOS.length} real conversations — meetings, calls, negotiations, apologies and more.</div></div>
   <div class="sit-grid">
     ${SCENARIOS.map(s=>`
     <div class="sit-tile ${s.id===S.scenarioId?'active':''}" data-scenario="${s.id}">
@@ -1475,7 +1790,8 @@ function bind(){
       if(ms.selected.length===2){
         const [a,b]=ms.selected;
         const ta=ms.tiles[a], tb=ms.tiles[b];
-        const set=MATCH_SETS[ms.set||0];
+        const allSets=genMatchSets(8);
+        const set=allSets[(ms.set||0)%allSets.length];
         const isMatch=set.pairs.some(p=>(p.a===ta&&p.b===tb)||(p.b===ta&&p.a===tb));
         if(isMatch){
           ms.matched.push(a,b);
@@ -1486,11 +1802,12 @@ function bind(){
           setTimeout(()=>{ document.querySelectorAll(".match-tile").forEach(t=>t.classList.remove("wrong-flash","selected")); },400);
         }
         ms.selected=[];
-        if(ms.matched.length===MATCH_SETS[ms.set||0].pairs.length*2){ addPts(10); setTimeout(()=>render(),300); }
+        if(ms.matched.length===set.pairs.length*2){ addPts(10); setTimeout(()=>render(),300); }
       }
     });
   });
-  document.querySelector("[data-next-match]")?.addEventListener("click",()=>{ S.matchSetIdx=((S.matchSetIdx||0)+1)%MATCH_SETS.length; window._matchState=null; render(); });
+  document.querySelector("[data-next-match]")?.addEventListener("click",()=>{ S.matchSetIdx=((S.matchSetIdx||0)+1)%genMatchSets(8).length; window._matchState=null; render(); });
+
 
   // Scramble
   document.querySelectorAll("[data-scram-pick]").forEach(l=>{
@@ -1527,7 +1844,7 @@ function bind(){
   document.getElementById("typeInput")?.addEventListener("input",(e)=>{
     const ts=window._typeState;
     if(!ts) return;
-    const items=TYPE_SENTENCES.filter(t=>t.lv===S.level);
+    const items=genTypeSet(S.level,8);
     const target=(items[ts.idx]||items[0]).text;
     if(!ts.started){ ts.started=true; ts.startTime=Date.now(); }
     ts.typed=e.target.value.slice(0,target.length);
@@ -1546,24 +1863,7 @@ function bind(){
     card.addEventListener("click",()=>{
       const i=parseInt(card.dataset.tlIdx);
       const correct=card.dataset.tlCorrect==="true";
-      const sets=[
-        {cards:[
-          {txt:"",correct:false,why:"Use 'for' with durations, not 'since'. Say: 'for three years'"},
-          {txt:"",correct:true,why:"Correct! 'Since' + specific time point."},
-          {txt:"",correct:false,why:"'Since' needs present perfect here."},
-        ]},
-        {cards:[
-          {txt:"",correct:false,why:"'Revert back' is redundant. Use 'get back to you'."},
-          {txt:"",correct:true,why:"Clear, professional, globally understood."},
-          {txt:"",correct:false,why:"Vague — give a specific time instead."},
-        ]},
-        {cards:[
-          {txt:"",correct:false,why:"'Do the needful' is Indian English — not used globally. Say 'Please take care of this'."},
-          {txt:"",correct:true,why:"Natural and universally understood."},
-          {txt:"",correct:true,why:"Polite, professional standard closing."},
-        ]},
-      ];
-      const why=(sets[S.trueLieSet||0].cards[i]||{}).why||"";
+      const why=(GRAMMAR_TRAPS[S.trueLieSet||0].cards[i]||{}).why||"";
       card.classList.add(correct?"truth-revealed":"lie-revealed");
       const fb=document.getElementById(`tl-fb-${i}`);
       if(fb){ fb.style.display="block"; fb.innerHTML=`${correct?"✅":"❌"} ${why}`; fb.style.color=correct?"var(--green)":"var(--coral)"; }
